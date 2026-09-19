@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../../config/api";
+import { apiFetch } from "../../utils/api";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -33,7 +33,6 @@ type Asset = {
   description?: string;
 };
 
-const API_URL = `${API_BASE_URL}/api/assets`;
 
 const formatDate = (date?: string) => {
   if (!date) return "-";
@@ -80,7 +79,7 @@ function AssetMaster() {
     try {
       setLoading(true);
 
-      const response = await fetch(API_URL);
+      const response = await apiFetch("/api/assets");
 
       if (!response.ok) {
         throw new Error("Failed to fetch assets");
@@ -146,7 +145,7 @@ function AssetMaster() {
     }
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await apiFetch("/api/assets", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -221,8 +220,8 @@ function AssetMaster() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(
-        `${API_URL}/${asset.id}`,
+      const response = await apiFetch(
+        `/api/assets/${asset.id}`,
         {
           method: "DELETE",
         }
@@ -258,8 +257,8 @@ function AssetMaster() {
     }
 
     try {
-      const response = await fetch(
-        `${API_URL}/${asset.id}`,
+      const response = await apiFetch(
+        `/api/assets/${asset.id}`,
         {
           method: "PUT",
           headers: {
