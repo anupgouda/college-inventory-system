@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "../config/api";
+import { apiFetch } from "../utils/api";
 import { useEffect, useState } from "react";
 import type { ElementType, ReactNode } from "react";
 
@@ -385,125 +386,108 @@ function Settings() {
   /* =======================================================
      HEALTH CHECK
   ======================================================= */
-
   const testSystemConnection = async () => {
-    setTestingConnection(true);
+  setTestingConnection(true);
 
-    setHealth({
-      backend: "checking",
-      database: "checking",
-      inventoryApi: "checking",
-    });
+  // Reset status while checking
+  setHealth({
+    backend: "checking",
+    database: "checking",
+    inventoryApi: "checking",
+  });
 
-    let backendStatus:
-      | "online"
-      | "offline" = "offline";
+  // ============================================
+  // 1. BACKEND HEALTH
+  // ============================================
 
-    let databaseStatus:
-      | "connected"
-      | "offline" = "offline";
-
-    let inventoryStatus:
-      | "online"
-      | "offline" = "offline";
-
-    /*
-     * Backend health
-     */
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/health`,
-        {
-          method: "GET",
-        }
-      );
-
-      if (response.ok) {
-        backendStatus = "online";
-      }
-    } catch (error) {
-      console.error(
-        "Backend health check failed:",
-        error
-      );
-    }
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/health`
+    );
 
     setHealth((previous) => ({
       ...previous,
-      backend: backendStatus,
+      backend: response.ok
+        ? "online"
+        : "offline",
     }));
-
-    /*
-     * Database
-     */
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/db-test`,
-        {
-          method: "GET",
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-
-        if (
-          data?.success === true ||
-          data?.database ||
-          data?.message
-        ) {
-          databaseStatus = "connected";
-        }
-      }
-    } catch (error) {
-      console.error(
-        "Database health check failed:",
-        error
-      );
-    }
+  } catch (error) {
+    console.error(
+      "Backend health check failed:",
+      error
+    );
 
     setHealth((previous) => ({
       ...previous,
-      database: databaseStatus,
+      backend: "offline",
     }));
+  }
 
-    /*
-     * Inventory API
-     */
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/stock`,
-        {
-          method: "GET",
-        }
-      );
+  // ============================================
+  // 2. DATABASE
+  // ============================================
 
-      if (response.ok) {
-        inventoryStatus = "online";
-      }
-    } catch (error) {
-      console.error(
-        "Inventory API check failed:",
-        error
-      );
+  try {
+    const response = await apiFetch(
+      "/api/db-test"
+    );
+
+    if (response.ok) {
+      setHealth((previous) => ({
+        ...previous,
+        database: "connected",
+      }));
+    } else {
+      setHealth((previous) => ({
+        ...previous,
+        database: "offline",
+      }));
     }
+  } catch (error) {
+    console.error(
+      "Database health check failed:",
+      error
+    );
 
     setHealth((previous) => ({
       ...previous,
-      inventoryApi: inventoryStatus,
+      database: "offline",
     }));
+  }
 
-    setTestingConnection(false);
-  };
+  // ============================================
+  // 3. INVENTORY API
+  // ============================================
 
-  /*
-   * Automatically check system when System tab opens.
-   */
-  useEffect(() => {
-    if (activeTab === "system") {
-      testSystemConnection();
-    }
-  }, [activeTab]);
+  try {
+    const response = await apiFetch(
+      "/api/stock"
+    );
+
+    setHealth((previous) => ({
+      ...previous,
+      inventoryApi: response.ok
+        ? "online"
+        : "offline",
+    }));
+  } catch (error) {
+    console.error(
+      "Inventory API health check failed:",
+      error
+    );
+
+    setHealth((previous) => ({
+      ...previous,
+      inventoryApi: "offline",
+    }));
+  }
+
+  // ============================================
+  // FINISH
+  // ============================================
+
+  setTestingConnection(false);
+};
 
   /* =======================================================
      REQUEST BROWSER NOTIFICATIONS WHEN ENABLED
@@ -1446,7 +1430,7 @@ function SystemSettings({
           <SystemInfo
             icon={Globe2}
             label="API Endpoint"
-            value="localhost:5001"
+            value={API_BASE_URL.replace(/^https?:\/\//, "")}
             status={
               health.inventoryApi ===
               "online"
