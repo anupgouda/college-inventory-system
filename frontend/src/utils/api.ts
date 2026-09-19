@@ -21,15 +21,9 @@ export async function apiFetch(
       headers,
     }
   );
-
   if (response.status === 401) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
-    window.location.href = "/login";
-
-    throw new Error("Session expired. Please login again.");
-  }
+  throw new Error("Authentication required");
+}
 
   return response;
 }
