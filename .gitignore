@@ -23,3 +23,5 @@ pnpm-debug.log*
 # IDE
 .vscode/
 .idea/
+
+college_inventory_backup.sql
