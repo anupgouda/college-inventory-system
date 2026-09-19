@@ -36,11 +36,24 @@ export default function Login() {
       }
 
       // Store authentication data
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // Make sure the backend actually returned a JWT
+if (!data.token) {
+  throw new Error("Login succeeded, but no authentication token was received.");
+}
 
-      // Go to dashboard
-      navigate("/inventory/dashboard");
+// Store authentication data
+localStorage.setItem("token", data.token);
+localStorage.setItem("user", JSON.stringify(data.user));
+
+// Verify it was stored
+const savedToken = localStorage.getItem("token");
+
+if (!savedToken) {
+  throw new Error("Authentication token could not be stored.");
+}
+
+// Go to dashboard
+navigate("/inventory/dashboard");
     } catch (error) {
       setError(
         error instanceof Error
