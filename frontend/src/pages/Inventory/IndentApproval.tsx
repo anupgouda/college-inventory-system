@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../../config/api";
+import { apiFetch } from "../../utils/api";
 import { useEffect, useState } from "react";
 import {
   CheckCircle2,
@@ -22,7 +22,6 @@ type Indent = {
   status: "Pending" | "Approved" | "Rejected";
 };
 
-const API_URL = `${API_BASE_URL}/api/indents`;
 
 const getIndentId = (indent: Indent) => {
   return indent.id ?? indent._id;
@@ -48,7 +47,7 @@ function IndentApproval() {
     try {
       setLoading(true);
 
-      const response = await fetch(API_URL);
+      const response = await apiFetch("/api/indents");
 
       if (!response.ok) {
         throw new Error("Failed to fetch indents");
@@ -83,7 +82,7 @@ function IndentApproval() {
     try {
       setUpdatingId(id);
 
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await apiFetch(`/api/indents/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
