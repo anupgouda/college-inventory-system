@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../../config/api";
+import { apiFetch } from "../../utils/api";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -26,7 +26,7 @@ type Checkout = {
   status: CheckoutStatus;
 };
 
-const API_URL = `${API_BASE_URL}/api/checkouts`;
+
 
 const formatDate = (date?: string) => {
   if (!date) return "-";
@@ -58,7 +58,7 @@ function MaterialCheckout() {
     try {
       setLoading(true);
 
-      const response = await fetch(API_URL);
+      const response = await apiFetch("/api/checkouts");
 
       if (!response.ok) {
         throw new Error("Failed to fetch checkout records");
@@ -124,12 +124,12 @@ function MaterialCheckout() {
     }
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await apiFetch("/api/checkouts", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
           itemName: formData.itemName.trim(),
           department: formData.department,
           quantity: formData.quantity,
@@ -185,8 +185,8 @@ function MaterialCheckout() {
     try {
       setUpdatingId(checkout.id);
 
-      const response = await fetch(
-        `${API_URL}/${checkout.id}/status`,
+      const response = await apiFetch(
+        `/api/checkouts/${checkout.id}/status`,
         {
           method: "PATCH",
           headers: {
@@ -231,8 +231,8 @@ function MaterialCheckout() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(
-        `${API_URL}/${checkout.id}`,
+      const response = await apiFetch(
+        `/api/checkouts/${checkout.id}`,
         {
           method: "DELETE",
         }
