@@ -6,6 +6,9 @@ import {
 } from "react-router-dom";
 
 import MainLayout from "./components/MainLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+import Login from "./pages/Login";
 
 import Dashboard from "./pages/Inventory/Dashboard";
 import IndentMaster from "./pages/Inventory/IndentMaster";
@@ -25,97 +28,118 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* =================================================
-            MAIN APPLICATION LAYOUT
-            Sidebar + Header + Page Content
-        ================================================= */}
+        {/* ================================
+            PUBLIC ROUTES
+        ================================= */}
 
-        <Route element={<MainLayout />}>
+        <Route path="/login" element={<Login />} />
 
-          {/* Dashboard */}
-          <Route
-            path="/"
-            element={<Dashboard />}
-          />
 
-          <Route
-            path="/inventory/dashboard"
-            element={<Dashboard />}
-          />
+        {/* ================================
+            PROTECTED APPLICATION
+        ================================= */}
 
-          {/* Inventory */}
-          <Route
-            path="/inventory/indent-master"
-            element={<IndentMaster />}
-          />
+        <Route element={<ProtectedRoute />}>
 
-          <Route
-            path="/inventory/indent-approval"
-            element={<IndentApproval />}
-          />
+          <Route element={<MainLayout />}>
 
-          <Route
-            path="/inventory/asset-master"
-            element={<AssetMaster />}
-          />
+            {/* Dashboard */}
+            <Route
+              path="/"
+              element={
+                <Navigate
+                  to="/inventory/dashboard"
+                  replace
+                />
+              }
+            />
 
-          <Route
-            path="/inventory/stock-entry"
-            element={<StockEntry />}
-          />
+            <Route
+              path="/inventory/dashboard"
+              element={<Dashboard />}
+            />
 
-          <Route
-            path="/inventory/material-checkout"
-            element={<MaterialCheckout />}
-          />
 
-          <Route
-            path="/inventory/vendor-master"
-            element={<VendorMaster />}
-          />
+            {/* Inventory */}
 
-          <Route
-            path="/inventory/purchase-order"
-            element={<PurchaseOrder />}
-          />
+            <Route
+              path="/inventory/indent-master"
+              element={<IndentMaster />}
+            />
 
-          <Route
-            path="/inventory/quotation"
-            element={<Quotation />}
-          />
+            <Route
+              path="/inventory/indent-approval"
+              element={<IndentApproval />}
+            />
 
-          <Route
-            path="/inventory/bill-master"
-            element={<BillMaster />}
-          />
+            <Route
+              path="/inventory/asset-master"
+              element={<AssetMaster />}
+            />
 
-          <Route
-            path="/inventory/reports"
-            element={<Reports />}
-          />
+            <Route
+              path="/inventory/stock-entry"
+              element={<StockEntry />}
+            />
 
-          {/* =================================================
-              SETTINGS
-              IMPORTANT:
-              Must be INSIDE MainLayout
-          ================================================= */}
+            <Route
+              path="/inventory/material-checkout"
+              element={<MaterialCheckout />}
+            />
 
-          <Route
-            path="/settings"
-            element={<Settings />}
-          />
+
+            {/* Procurement */}
+
+            <Route
+              path="/inventory/vendor-master"
+              element={<VendorMaster />}
+            />
+
+            <Route
+              path="/inventory/purchase-order"
+              element={<PurchaseOrder />}
+            />
+
+            <Route
+              path="/inventory/quotation"
+              element={<Quotation />}
+            />
+
+            <Route
+              path="/inventory/bill-master"
+              element={<BillMaster />}
+            />
+
+
+            {/* Analytics */}
+
+            <Route
+              path="/inventory/reports"
+              element={<Reports />}
+            />
+
+
+            {/* Settings */}
+
+            <Route
+              path="/settings"
+              element={<Settings />}
+            />
+
+          </Route>
 
         </Route>
 
-        {/* =================================================
+
+        {/* ================================
             UNKNOWN ROUTES
-        ================================================= */}
+        ================================= */}
 
         <Route
           path="*"
           element={
             <Navigate
-              to="/inventory/dashboard"
+              to="/login"
               replace
             />
           }
