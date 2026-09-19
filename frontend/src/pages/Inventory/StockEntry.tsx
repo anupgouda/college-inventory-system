@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../../config/api";
+import { apiFetch } from "../../utils/api";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -26,7 +26,6 @@ type Stock = {
   purchaseOrder?: string;
 };
 
-const API_URL = `${API_BASE_URL}/api/stock`;
 
 const formatDate = (date?: string) => {
   if (!date) return "-";
@@ -67,7 +66,7 @@ function StockEntry() {
     try {
       setLoading(true);
 
-      const response = await fetch(API_URL);
+      const response = await apiFetch("/api/stock");
 
       if (!response.ok) {
         throw new Error("Failed to fetch stock");
@@ -129,7 +128,7 @@ function StockEntry() {
     }
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await apiFetch("/api/stock", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -191,12 +190,12 @@ function StockEntry() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(
-        `${API_URL}/${item.id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await apiFetch(
+  `/api/stock/${item.id}`,
+  {
+    method: "DELETE",
+  }
+); 
 
       const data = await response.json();
 
