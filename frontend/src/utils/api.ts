@@ -3,7 +3,7 @@ import { API_BASE_URL } from "../config/api";
 export async function apiFetch(
   endpoint: string,
   options: RequestInit = {}
-) {
+): Promise<Response> {
   const token = localStorage.getItem("token");
 
   const headers = new Headers(options.headers);
@@ -14,16 +14,8 @@ export async function apiFetch(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(
-    `${API_BASE_URL}${endpoint}`,
-    {
-      ...options,
-      headers,
-    }
-  );
-  if (response.status === 401) {
-  throw new Error("Authentication required");
-}
-
-  return response;
+  return fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
 }
