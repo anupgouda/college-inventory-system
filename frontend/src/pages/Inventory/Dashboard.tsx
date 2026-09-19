@@ -1,4 +1,3 @@
-import { API_BASE_URL } from "../../config/api";
 import { useEffect, useState } from "react";
 import {
   ClipboardCheck,
@@ -13,6 +12,7 @@ import {
   CalendarDays,
   FileText,
 } from "lucide-react";
+import { apiFetch } from "../../utils/api";
 
 type DashboardData = {
   pendingApprovals: number;
@@ -58,7 +58,6 @@ type OpenPurchaseOrder = {
   vendor_name: string;
 };
 
-const API_URL = `${API_BASE_URL}/api/dashboard`;
 
 // --------------------------------------------------
 // DATE FORMAT
@@ -142,7 +141,7 @@ function Dashboard() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(API_URL);
+      const response = await apiFetch("/api/dashboard");
 
       if (!response.ok) {
         throw new Error("Failed to fetch dashboard");
@@ -165,8 +164,8 @@ function Dashboard() {
 
   const fetchPendingIndents = async () => {
     try {
-      const response = await fetch(
-        `${API_URL}/pending-approvals`
+      const response = await apiFetch(
+      "/api/dashboard/pending-approvals"
       );
 
       if (!response.ok) {
@@ -187,8 +186,8 @@ function Dashboard() {
 
   const fetchLowStock = async () => {
     try {
-      const response = await fetch(
-        `${API_URL}/low-stock`
+      const response = await apiFetch(
+      "/api/dashboard/low-stock"
       );
 
       if (!response.ok) {
@@ -209,8 +208,8 @@ function Dashboard() {
 
   const fetchOpenPurchaseOrders = async () => {
     try {
-      const response = await fetch(
-        `${API_URL}/open-purchase-orders`
+      const response = await apiFetch(
+        "/api/dashboard/open-purchase-orders"
       );
 
       if (!response.ok) {
