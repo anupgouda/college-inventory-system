@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html {
+  background: #f8fafc;
+}
+
+body {
+  margin: 0;
+  background: #f8fafc;
+  color: #0f172a;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+/* =========================================================
+   DARK THEME
+========================================================= */
+
+html[data-theme="dark"] {
+  background: #020617;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body {
+  background: #020617;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .bg-slate-50 {
+  background-color: #020617 !important;
+}
+
+html[data-theme="dark"] .bg-white {
+  background-color: #0f172a !important;
+}
+
+html[data-theme="dark"] .bg-slate-100 {
+  background-color: #1e293b !important;
+}
+
+html[data-theme="dark"] .text-slate-900 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .text-slate-400 {
+  color: #64748b !important;
+}
+
+html[data-theme="dark"] .border-slate-200 {
+  border-color: #334155 !important;
+}
+
+html[data-theme="dark"] .border-slate-100 {
+  border-color: #1e293b !important;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: #64748b !important;
+}
+
+html[data-theme="dark"] .hover\:bg-slate-50:hover {
+  background-color: #1e293b !important;
+}
+
+html[data-theme="dark"] .hover\:bg-slate-100:hover {
+  background-color: #334155 !important;
+}
+
+/* =========================================================
+   SYSTEM THEME
+========================================================= */
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"] {
+    background: #020617;
+    color-scheme: dark;
+  }
+
+  html[data-theme="system"] body {
+    background: #020617;
+    color: #e2e8f0;
+  }
+
+  html[data-theme="system"] .bg-slate-50 {
+    background-color: #020617 !important;
+  }
+
+  html[data-theme="system"] .bg-white {
+    background-color: #0f172a !important;
+  }
+
+  html[data-theme="system"] .bg-slate-100 {
+    background-color: #1e293b !important;
+  }
+
+  html[data-theme="system"] .text-slate-900 {
+    color: #f8fafc !important;
+  }
+
+  html[data-theme="system"] .text-slate-800 {
+    color: #f1f5f9 !important;
+  }
+
+  html[data-theme="system"] .text-slate-700 {
+    color: #e2e8f0 !important;
+  }
+
+  html[data-theme="system"] .text-slate-600 {
+    color: #cbd5e1 !important;
+  }
+
+  html[data-theme="system"] .text-slate-500 {
+    color: #94a3b8 !important;
+  }
+
+  html[data-theme="system"] .text-slate-400 {
+    color: #64748b !important;
+  }
+
+  html[data-theme="system"] .border-slate-200 {
+    border-color: #334155 !important;
+  }
+
+  html[data-theme="system"] .border-slate-100 {
+    border-color: #1e293b !important;
+  }
+
+  html[data-theme="system"] input,
+  html[data-theme="system"] select,
+  html[data-theme="system"] textarea {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+    border-color: #334155 !important;
+  }
+
+  html[data-theme="system"] .hover\:bg-slate-50:hover {
+    background-color: #1e293b !important;
+  }
+}
