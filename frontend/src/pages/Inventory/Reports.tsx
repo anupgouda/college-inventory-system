@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../config/api";
 import { useState } from "react";
 import {
   FileBarChart,
@@ -10,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 
-const REPORT_API = "http://localhost:5001/api/reports";
+const REPORT_API = `${API_BASE_URL}/api/reports`;
 
 type ReportType =
   | "indentMaster"

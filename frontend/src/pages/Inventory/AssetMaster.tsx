@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../config/api";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -32,7 +33,7 @@ type Asset = {
   description?: string;
 };
 
-const API_URL = "http://localhost:5001/api/assets";
+const API_URL = `${API_BASE_URL}/api/assets`;
 
 const formatDate = (date?: string) => {
   if (!date) return "-";

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../config/api";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -23,7 +24,7 @@ type Vendor = {
   address?: string;
 };
 
-const API_URL = "http://localhost:5001/api/vendors";
+const API_URL = `${API_BASE_URL}/api/vendors`;
 
 function VendorMaster() {
   const [vendors, setVendors] = useState<Vendor[]>([]);

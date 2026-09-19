@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../config/api";
 import { useEffect, useState } from "react";
 import {
   ClipboardCheck,
@@ -10,7 +11,6 @@ import {
   ChevronDown,
   ChevronUp,
   CalendarDays,
-  IndianRupee,
   FileText,
 } from "lucide-react";
 
@@ -58,7 +58,7 @@ type OpenPurchaseOrder = {
   vendor_name: string;
 };
 
-const API_URL = "http://localhost:5001/api/dashboard";
+const API_URL = `${API_BASE_URL}/api/dashboard`;
 
 // --------------------------------------------------
 // DATE FORMAT

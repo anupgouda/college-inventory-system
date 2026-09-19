@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:5001";
+import { API_BASE_URL } from "../config/api";
 
 const SETTINGS_KEY = "collegeInventorySettings";
 const READ_KEY = "collegeInventoryReadNotifications";

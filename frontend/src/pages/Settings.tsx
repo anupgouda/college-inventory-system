@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../config/api";
 import { useEffect, useState } from "react";
 import type { ElementType, ReactNode } from "react";
 
@@ -94,7 +95,6 @@ const DEFAULT_SETTINGS: SettingsData = {
   theme: "light",
 };
 
-const API_BASE_URL = "http://localhost:5001";
 
 const tabs: {
   id: SettingsTab;

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../config/api";
 import { useEffect, useState } from "react";
 import {
   CheckCircle2,
@@ -21,7 +22,7 @@ type Indent = {
   status: "Pending" | "Approved" | "Rejected";
 };
 
-const API_URL = "http://localhost:5001/api/indents";
+const API_URL = `${API_BASE_URL}/api/indents`;
 
 const getIndentId = (indent: Indent) => {
   return indent.id ?? indent._id;

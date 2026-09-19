@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../config/api";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -25,7 +26,7 @@ type Stock = {
   purchaseOrder?: string;
 };
 
-const API_URL = "http://localhost:5001/api/stock";
+const API_URL = `${API_BASE_URL}/api/stock`;
 
 const formatDate = (date?: string) => {
   if (!date) return "-";

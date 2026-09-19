@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../config/api";
 import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
@@ -14,8 +15,8 @@ import {
   X,
 } from "lucide-react";
 
-const QUOTATION_API = "http://localhost:5001/api/quotations";
-const VENDOR_API = "http://localhost:5001/api/vendors";
+const QUOTATION_API = `${API_BASE_URL}/api/quotations`;
+const VENDOR_API = `${API_BASE_URL}/api/vendors`;
 
 type Vendor = {
   id: number;

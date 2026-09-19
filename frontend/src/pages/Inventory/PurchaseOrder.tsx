@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../config/api";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -34,8 +35,8 @@ type PurchaseOrder = {
   notes?: string;
 };
 
-const PO_API = "http://localhost:5001/api/purchase-orders";
-const VENDOR_API = "http://localhost:5001/api/vendors";
+const PO_API = `${API_BASE_URL}/api/purchase-orders`;
+const VENDOR_API = `${API_BASE_URL}/api/vendors`;
 
 const formatDate = (date?: string) => {
   if (!date) return "-";

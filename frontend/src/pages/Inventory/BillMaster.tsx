@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../config/api";
 import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
@@ -11,13 +12,12 @@ import {
   CheckCircle2,
   Clock3,
   CreditCard,
-  XCircle,
   X,
 } from "lucide-react";
 
-const BILL_API = "http://localhost:5001/api/bills";
-const VENDOR_API = "http://localhost:5001/api/vendors";
-const PO_API = "http://localhost:5001/api/purchase-orders";
+const BILL_API = `${API_BASE_URL}/api/bills`;
+const VENDOR_API = `${API_BASE_URL}/api/vendors`;
+const PO_API = `${API_BASE_URL}/api/purchase-orders`;
 
 type Vendor = {
   id: number;

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../config/api";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -25,7 +26,7 @@ type Checkout = {
   status: CheckoutStatus;
 };
 
-const API_URL = "http://localhost:5001/api/checkouts";
+const API_URL = `${API_BASE_URL}/api/checkouts`;
 
 const formatDate = (date?: string) => {
   if (!date) return "-";
