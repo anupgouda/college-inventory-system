@@ -13,6 +13,10 @@ const billRoutes = require("./routes/bills");
 const assetRoutes = require("./routes/assets");
 const reportRoutes = require("./routes/reports");
 const dashboardRoutes = require("./routes/dashboard");
+const authRoutes = require("./routes/auth");
+const {
+  authenticateToken,
+} = require("./middleware/authMiddleware");
 
 const app = express();
 
@@ -126,7 +130,14 @@ app.use("/api/bills", billRoutes);
 app.use("/api/assets", assetRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-
+app.use("/api/auth", authRoutes);
+app.get("/api/auth/protected-test", authenticateToken, (req, res) => {
+  res.json({
+    success: true,
+    message: "Protected route working",
+    user: req.user,
+  });
+});
 
 // ===============================
 // 404

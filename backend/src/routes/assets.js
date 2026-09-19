@@ -1,336 +1,521 @@
 const express = require("express");
 const router = express.Router();
 
-const db = require("../db");
+const pool = require("../db");
 
-// GET all assets
+const {
+  authenticateToken,
+  authorizeRoles,
+} = require("../middleware/authMiddleware");
+
+// ======================================================
+// AUTHENTICATION
+// ======================================================
+
+router.use(authenticateToken);
+
+
+// ======================================================
+// GET ALL ASSETS
+// GET /api/assets
+// ======================================================
+
 router.get("/", async (req, res) => {
-    try {
-        const result = await db.query(`
-            SELECT
-                id,
-                asset_code AS "assetCode",
-                asset_name AS "assetName",
-                category,
-                department,
-                location,
-                quantity,
-                assigned_to AS "assignedTo",
-                purchase_date AS "purchaseDate",
-                purchase_price AS "purchasePrice",
-                condition,
-                status,
-                description,
-                created_at AS "createdAt"
-            FROM assets
-            ORDER BY id DESC
-        `);
+  try {
+    const result = await pool.query(`
+      SELECT
+        id,
+        asset_code AS "assetCode",
+        asset_name AS "assetName",
+        category,
+        department,
+        location,
+        quantity,
+        assigned_to AS "assignedTo",
+        purchase_date AS "purchaseDate",
+        purchase_price AS "purchasePrice",
+        condition,
+        status,
+        description,
+        created_at AS "createdAt"
+      FROM assets
+      ORDER BY id DESC
+    `);
 
-        res.json(result.rows);
+    res.json(result.rows);
 
-    } catch (error) {
-        console.error("Get assets error:", error);
+  } catch (error) {
+    console.error("GET /api/assets error:", error);
 
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch assets"
-        });
-    }
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch assets",
+    });
+  }
 });
 
 
-// GET single asset
+// ======================================================
+// GET SINGLE ASSET
+// GET /api/assets/:id
+// ======================================================
+
 router.get("/:id", async (req, res) => {
-    try {
-        const result = await db.query(`
-            SELECT
-                id,
-                asset_code AS "assetCode",
-                asset_name AS "assetName",
-                category,
-                department,
-                location,
-                quantity,
-                assigned_to AS "assignedTo",
-                purchase_date AS "purchaseDate",
-                purchase_price AS "purchasePrice",
-                condition,
-                status,
-                description,
-                created_at AS "createdAt"
-            FROM assets
-            WHERE id = $1
-        `, [req.params.id]);
+  try {
+    const { id } = req.params;
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Asset not found"
-            });
-        }
+    const result = await pool.query(
+      `
+      SELECT
+        id,
+        asset_code AS "assetCode",
+        asset_name AS "assetName",
+        category,
+        department,
+        location,
+        quantity,
+        assigned_to AS "assignedTo",
+        purchase_date AS "purchaseDate",
+        purchase_price AS "purchasePrice",
+        condition,
+        status,
+        description,
+        created_at AS "createdAt"
+      FROM assets
+      WHERE id = $1
+      `,
+      [id]
+    );
 
-        res.json(result.rows[0]);
-
-    } catch (error) {
-        console.error("Get asset error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch asset"
-        });
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Asset not found",
+      });
     }
+
+    res.json(result.rows[0]);
+
+  } catch (error) {
+    console.error("GET /api/assets/:id error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch asset",
+    });
+  }
 });
 
 
-// CREATE asset
-router.post("/", async (req, res) => {
-    try {
-        const {
-            assetCode,
-            assetName,
-            category,
-            department,
-            location,
-            quantity,
-            assignedTo,
-            purchaseDate,
-            purchasePrice,
-            condition,
-            status,
-            description
-        } = req.body;
+// ======================================================
+// CREATE ASSET
+// POST /api/assets
+// ======================================================
 
-        if (
-            !assetCode ||
-            !assetName ||
-            !category ||
-            !department
-        ) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Asset code, asset name, category and department are required"
-            });
-        }
+router.post(
+  "/",
+  authorizeRoles("Admin", "IT", "Store Manager"),
+  async (req, res) => {
+  try {
+    const {
+      assetCode,
+      assetName,
+      category,
+      department,
+      location,
+      quantity = 1,
+      assignedTo,
+      purchaseDate,
+      purchasePrice,
+      condition = "Good",
+      status = "Available",
+      description,
+    } = req.body;
 
-        const result = await db.query(`
-            INSERT INTO assets (
-                asset_code,
-                asset_name,
-                category,
-                department,
-                location,
-                quantity,
-                assigned_to,
-                purchase_date,
-                purchase_price,
-                condition,
-                status,
-                description
-            )
-            VALUES (
-                $1,
-                $2,
-                $3,
-                $4,
-                $5,
-                COALESCE($6, 1),
-                $7,
-                $8::date,
-                $9,
-                COALESCE($10, 'Good'),
-                COALESCE($11, 'Available'),
-                $12
-            )
-            RETURNING
-                id,
-                asset_code AS "assetCode",
-                asset_name AS "assetName",
-                category,
-                department,
-                location,
-                quantity,
-                assigned_to AS "assignedTo",
-                purchase_date AS "purchaseDate",
-                purchase_price AS "purchasePrice",
-                condition,
-                status,
-                description,
-                created_at AS "createdAt"
-        `, [
-            assetCode,
-            assetName,
-            category,
-            department,
-            location || null,
-            quantity ? Number(quantity) : null,
-            assignedTo || null,
-            purchaseDate || null,
-            purchasePrice !== "" && purchasePrice != null
-                ? Number(purchasePrice)
-                : null,
-            condition || null,
-            status || null,
-            description || null
-        ]);
-
-        res.status(201).json(result.rows[0]);
-
-    } catch (error) {
-        console.error("Create asset error:", error);
-
-        if (error.code === "23505") {
-            return res.status(409).json({
-                success: false,
-                message: "Asset code already exists"
-            });
-        }
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to create asset"
-        });
+    if (
+      !assetCode ||
+      !assetName ||
+      !category ||
+      !department
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Asset code, asset name, category and department are required",
+      });
     }
+
+    if (Number(quantity) <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Quantity must be greater than 0",
+      });
+    }
+
+    if (
+      purchasePrice !== undefined &&
+      purchasePrice !== null &&
+      Number(purchasePrice) < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Purchase price cannot be negative",
+      });
+    }
+
+    const allowedConditions = [
+      "New",
+      "Good",
+      "Fair",
+      "Damaged",
+    ];
+
+    if (!allowedConditions.includes(condition)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid asset condition",
+      });
+    }
+
+    const allowedStatuses = [
+      "Available",
+      "Assigned",
+      "Under Maintenance",
+      "Disposed",
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid asset status",
+      });
+    }
+
+    const result = await pool.query(
+      `
+      INSERT INTO assets
+      (
+        asset_code,
+        asset_name,
+        category,
+        department,
+        location,
+        quantity,
+        assigned_to,
+        purchase_date,
+        purchase_price,
+        condition,
+        status,
+        description
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9,
+        $10,
+        $11,
+        $12
+      )
+      RETURNING
+        id,
+        asset_code AS "assetCode",
+        asset_name AS "assetName",
+        category,
+        department,
+        location,
+        quantity,
+        assigned_to AS "assignedTo",
+        purchase_date AS "purchaseDate",
+        purchase_price AS "purchasePrice",
+        condition,
+        status,
+        description,
+        created_at AS "createdAt"
+      `,
+      [
+        assetCode.trim(),
+        assetName.trim(),
+        category.trim(),
+        department.trim(),
+        location || null,
+        Number(quantity),
+        assignedTo || null,
+        purchaseDate || null,
+        purchasePrice ?? null,
+        condition,
+        status,
+        description || null,
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+
+  } catch (error) {
+    console.error("POST /api/assets error:", error);
+
+    if (error.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        message: "Asset code already exists",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to create asset",
+    });
+  }
 });
 
 
-// UPDATE asset
-router.put("/:id", async (req, res) => {
-    try {
-        const {
-            assetCode,
-            assetName,
-            category,
-            department,
-            location,
-            quantity,
-            assignedTo,
-            purchaseDate,
-            purchasePrice,
-            condition,
-            status,
-            description
-        } = req.body;
+// ======================================================
+// UPDATE ASSET
+// PATCH /api/assets/:id
+// ======================================================
 
-        const result = await db.query(`
-            UPDATE assets
-            SET
-                asset_code = $1,
-                asset_name = $2,
-                category = $3,
-                department = $4,
-                location = $5,
-                quantity = $6,
-                assigned_to = $7,
-                purchase_date = $8::date,
-                purchase_price = $9,
-                condition = $10,
-                status = $11,
-                description = $12
-            WHERE id = $13
-            RETURNING
-                id,
-                asset_code AS "assetCode",
-                asset_name AS "assetName",
-                category,
-                department,
-                location,
-                quantity,
-                assigned_to AS "assignedTo",
-                purchase_date AS "purchaseDate",
-                purchase_price AS "purchasePrice",
-                condition,
-                status,
-                description,
-                created_at AS "createdAt"
-        `, [
-            assetCode,
-            assetName,
-            category,
-            department,
-            location || null,
-            Number(quantity),
-            assignedTo || null,
-            purchaseDate || null,
-            purchasePrice !== "" && purchasePrice != null
-                ? Number(purchasePrice)
-                : null,
-            condition,
-            status,
-            description || null,
-            req.params.id
-        ]);
+router.patch(
+  "/:id",
+  authorizeRoles("Admin", "IT", "Store Manager"),
+  async (req, res) => {
+  try {
+    const { id } = req.params;
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Asset not found"
-            });
-        }
+    const {
+      assetCode,
+      assetName,
+      category,
+      department,
+      location,
+      quantity,
+      assignedTo,
+      purchaseDate,
+      purchasePrice,
+      condition,
+      status,
+      description,
+    } = req.body;
 
-        res.json(result.rows[0]);
-
-    } catch (error) {
-        console.error("Update asset error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to update asset"
-        });
+    if (
+      !assetCode ||
+      !assetName ||
+      !category ||
+      !department ||
+      quantity === undefined ||
+      !condition ||
+      !status
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Asset code, asset name, category, department, quantity, condition and status are required",
+      });
     }
+
+    if (Number(quantity) <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Quantity must be greater than 0",
+      });
+    }
+
+    if (
+      purchasePrice !== undefined &&
+      purchasePrice !== null &&
+      Number(purchasePrice) < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Purchase price cannot be negative",
+      });
+    }
+
+    const allowedConditions = [
+      "New",
+      "Good",
+      "Fair",
+      "Damaged",
+    ];
+
+    if (!allowedConditions.includes(condition)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid asset condition",
+      });
+    }
+
+    const allowedStatuses = [
+      "Available",
+      "Assigned",
+      "Under Maintenance",
+      "Disposed",
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid asset status",
+      });
+    }
+
+    const result = await pool.query(
+      `
+      UPDATE assets
+      SET
+        asset_code = $1,
+        asset_name = $2,
+        category = $3,
+        department = $4,
+        location = $5,
+        quantity = $6,
+        assigned_to = $7,
+        purchase_date = $8,
+        purchase_price = $9,
+        condition = $10,
+        status = $11,
+        description = $12
+      WHERE id = $13
+      RETURNING
+        id,
+        asset_code AS "assetCode",
+        asset_name AS "assetName",
+        category,
+        department,
+        location,
+        quantity,
+        assigned_to AS "assignedTo",
+        purchase_date AS "purchaseDate",
+        purchase_price AS "purchasePrice",
+        condition,
+        status,
+        description,
+        created_at AS "createdAt"
+      `,
+      [
+        assetCode.trim(),
+        assetName.trim(),
+        category.trim(),
+        department.trim(),
+        location || null,
+        Number(quantity),
+        assignedTo || null,
+        purchaseDate || null,
+        purchasePrice ?? null,
+        condition,
+        status,
+        description || null,
+        id,
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Asset not found",
+      });
+    }
+
+    res.json(result.rows[0]);
+
+  } catch (error) {
+    console.error("PATCH /api/assets/:id error:", error);
+
+    if (error.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        message: "Asset code already exists",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to update asset",
+    });
+  }
 });
 
 
-// DELETE asset
-router.delete("/:id", async (req, res) => {
-    try {
-        const result = await db.query(
-            "DELETE FROM assets WHERE id = $1 RETURNING id",
-            [req.params.id]
-        );
+// ======================================================
+// DELETE ASSET
+// DELETE /api/assets/:id
+// ======================================================
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Asset not found"
-            });
-        }
+router.delete(
+  "/:id",
+  authorizeRoles("Admin", "IT"),
+  async (req, res) => {
+  try {
+    const { id } = req.params;
 
-        res.json({
-            success: true,
-            message: "Asset deleted successfully"
-        });
+    const result = await pool.query(
+      `
+      DELETE FROM assets
+      WHERE id = $1
+      RETURNING
+        id,
+        asset_code AS "assetCode",
+        asset_name AS "assetName"
+      `,
+      [id]
+    );
 
-    } catch (error) {
-        console.error("Delete asset error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to delete asset"
-        });
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Asset not found",
+      });
     }
+
+    res.json({
+      success: true,
+      message: "Asset deleted successfully",
+      data: result.rows[0],
+    });
+
+  } catch (error) {
+    console.error("DELETE /api/assets/:id error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete asset",
+    });
+  }
 });
 
 
-// DELETE all assets
+// ======================================================
+// DELETE ALL ASSETS
+// DELETE /api/assets
+// ======================================================
+
 router.delete("/", async (req, res) => {
-    try {
-        await db.query("DELETE FROM assets");
+  try {
+    await pool.query("DELETE FROM assets");
 
-        res.json({
-            success: true,
-            message: "All assets deleted successfully"
-        });
+    res.json({
+      success: true,
+      message: "All assets deleted successfully",
+    });
 
-    } catch (error) {
-        console.error("Delete all assets error:", error);
+  } catch (error) {
+    console.error("DELETE /api/assets error:", error);
 
-        res.status(500).json({
-            success: false,
-            message: "Failed to delete assets"
-        });
-    }
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete all assets",
+    });
+  }
 });
 
+
+// ======================================================
+// EXPORT
+// ======================================================
 
 module.exports = router;

@@ -1,266 +1,316 @@
 const express = require("express");
-const db = require("../db");
-
 const router = express.Router();
 
+const pool = require("../db");
 
-// =====================================================
+const {
+  authenticateToken,
+  authorizeRoles,
+} = require("../middleware/authMiddleware");
+
+// ======================================================
+// AUTHENTICATION
+// ======================================================
+
+router.use(authenticateToken);
+
+
+// ======================================================
 // GET ALL CHECKOUTS
-// =====================================================
+// GET /api/checkouts
+// ======================================================
 
 router.get("/", async (req, res) => {
-    try {
-        const result = await db.query(`
-            SELECT
-                id,
-                item_name AS "itemName",
-                department,
-                quantity,
-                TO_CHAR(checkout_date, 'YYYY-MM-DD') AS "checkoutDate",
-                TO_CHAR(expected_return_date, 'YYYY-MM-DD') AS "expectedReturnDate",
-                purpose,
-                status
-            FROM checkouts
-            ORDER BY created_at DESC
-        `);
+  try {
+    const result = await pool.query(`
+      SELECT
+        id,
+        item_name AS "itemName",
+        department,
+        quantity,
+        checkout_date AS "checkoutDate",
+        expected_return_date AS "expectedReturnDate",
+        purpose,
+        status,
+        created_at AS "createdAt"
+      FROM checkouts
+      ORDER BY id DESC
+    `);
 
-        res.json(result.rows);
+    res.json(result.rows);
 
-    } catch (error) {
-        console.error("Error fetching checkouts:", error);
+  } catch (error) {
+    console.error("GET /api/checkouts error:", error);
 
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch checkout records"
-        });
-    }
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch checkouts",
+    });
+  }
 });
 
 
-// =====================================================
+// ======================================================
 // CREATE CHECKOUT
-// =====================================================
+// POST /api/checkouts
+// ======================================================
 
-router.post("/", async (req, res) => {
-    try {
-        const {
-            itemName,
-            department,
-            quantity,
-            checkoutDate,
-            expectedReturnDate,
-            purpose
-        } = req.body;
+router.post(
+  "/",
+  authorizeRoles("Admin", "Faculty", "HOD", "IT", "Store Manager"),
+  async (req, res) => {
+  try {
+    const {
+      itemName,
+      department,
+      quantity,
+      checkoutDate,
+      expectedReturnDate,
+      purpose,
+      status = "Checked Out",
+    } = req.body;
 
-
-        // -----------------------------------------------
-        // Validate required fields
-        // -----------------------------------------------
-
-        if (
-            !itemName ||
-            !department ||
-            !quantity ||
-            !expectedReturnDate ||
-            !purpose
-        ) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Item name, department, quantity, expected return date and purpose are required"
-            });
-        }
-
-
-        // -----------------------------------------------
-        // Validate quantity
-        // -----------------------------------------------
-
-        const parsedQuantity = Number(quantity);
-
-        if (
-            !Number.isInteger(parsedQuantity) ||
-            parsedQuantity <= 0
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "Quantity must be a positive integer"
-            });
-        }
-
-
-        // -----------------------------------------------
-        // Insert checkout
-        // -----------------------------------------------
-
-        const result = await db.query(`
-            INSERT INTO checkouts (
-                item_name,
-                department,
-                quantity,
-                checkout_date,
-                expected_return_date,
-                purpose
-            )
-            VALUES (
-                $1,
-                $2,
-                $3,
-                COALESCE($4::date, CURRENT_DATE),
-                $5::date,
-                $6
-            )
-            RETURNING
-                id,
-                item_name AS "itemName",
-                department,
-                quantity,
-                TO_CHAR(checkout_date, 'YYYY-MM-DD') AS "checkoutDate",
-                TO_CHAR(expected_return_date, 'YYYY-MM-DD') AS "expectedReturnDate",
-                purpose,
-                status
-        `, [
-            itemName.trim(),
-            department,
-            parsedQuantity,
-            checkoutDate || null,
-            expectedReturnDate,
-            purpose.trim()
-        ]);
-
-
-        res.status(201).json(result.rows[0]);
-
-    } catch (error) {
-        console.error("Error creating checkout:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to create checkout record"
-        });
+    if (
+      !itemName ||
+      !department ||
+      quantity === undefined ||
+      !expectedReturnDate ||
+      !purpose
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Item name, department, quantity, expected return date and purpose are required",
+      });
     }
+
+    if (Number(quantity) <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Quantity must be greater than 0",
+      });
+    }
+
+    const allowedStatuses = [
+      "Checked Out",
+      "Returned",
+      "Overdue",
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid checkout status",
+      });
+    }
+
+    const result = await pool.query(
+      `
+      INSERT INTO checkouts
+      (
+        item_name,
+        department,
+        quantity,
+        checkout_date,
+        expected_return_date,
+        purpose,
+        status
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        COALESCE($4::date, CURRENT_DATE),
+        $5,
+        $6,
+        $7
+      )
+      RETURNING
+        id,
+        item_name AS "itemName",
+        department,
+        quantity,
+        checkout_date AS "checkoutDate",
+        expected_return_date AS "expectedReturnDate",
+        purpose,
+        status,
+        created_at AS "createdAt"
+      `,
+      [
+        itemName,
+        department,
+        Number(quantity),
+        checkoutDate || null,
+        expectedReturnDate,
+        purpose,
+        status,
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+
+  } catch (error) {
+    console.error("POST /api/checkouts error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to create checkout",
+    });
+  }
 });
 
 
-// =====================================================
+// ======================================================
 // UPDATE CHECKOUT STATUS
-// =====================================================
+// PATCH /api/checkouts/:id
+// ======================================================
 
-router.patch("/:id/status", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status } = req.body;
+router.patch(
+  "/:id",
+  authorizeRoles(
+    "Admin",
+    "Faculty",
+    "HOD",
+    "IT",
+    "Store Manager"
+  ),
+  async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
 
-        const validStatuses = [
-            "Checked Out",
-            "Returned",
-            "Overdue"
-        ];
+    const allowedStatuses = [
+      "Checked Out",
+      "Returned",
+      "Overdue",
+    ];
 
-        if (!validStatuses.includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid checkout status"
-            });
-        }
-
-        const result = await db.query(`
-            UPDATE checkouts
-            SET status = $1
-            WHERE id = $2
-            RETURNING
-                id,
-                item_name AS "itemName",
-                department,
-                quantity,
-                TO_CHAR(checkout_date, 'YYYY-MM-DD') AS "checkoutDate",
-                TO_CHAR(expected_return_date, 'YYYY-MM-DD') AS "expectedReturnDate",
-                purpose,
-                status
-        `, [status, id]);
-
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Checkout record not found"
-            });
-        }
-
-
-        res.json(result.rows[0]);
-
-    } catch (error) {
-        console.error("Error updating checkout:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to update checkout status"
-        });
+    if (!status || !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid checkout status",
+      });
     }
+
+    const result = await pool.query(
+      `
+      UPDATE checkouts
+      SET status = $1
+      WHERE id = $2
+      RETURNING
+        id,
+        item_name AS "itemName",
+        department,
+        quantity,
+        checkout_date AS "checkoutDate",
+        expected_return_date AS "expectedReturnDate",
+        purpose,
+        status,
+        created_at AS "createdAt"
+      `,
+      [status, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Checkout record not found",
+      });
+    }
+
+    res.json(result.rows[0]);
+
+  } catch (error) {
+    console.error("PATCH /api/checkouts/:id error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to update checkout",
+    });
+  }
 });
 
 
-// =====================================================
+// ======================================================
 // DELETE CHECKOUT
+// DELETE /api/checkouts/:id
 // =====================================================
+router.delete(
+  "/:id",
+  authorizeRoles("Admin", "Store Manager"),
+  async (req, res) => {
+  try {
+    const { id } = req.params;
 
-router.delete("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
+    const result = await pool.query(
+      `
+      DELETE FROM checkouts
+      WHERE id = $1
+      RETURNING
+        id,
+        item_name AS "itemName",
+        department,
+        quantity,
+        checkout_date AS "checkoutDate",
+        expected_return_date AS "expectedReturnDate",
+        purpose,
+        status
+      `,
+      [id]
+    );
 
-        const result = await db.query(
-            "DELETE FROM checkouts WHERE id = $1 RETURNING id",
-            [id]
-        );
-
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Checkout record not found"
-            });
-        }
-
-
-        res.json({
-            success: true,
-            message: "Checkout record deleted successfully"
-        });
-
-    } catch (error) {
-        console.error("Error deleting checkout:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to delete checkout record"
-        });
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Checkout record not found",
+      });
     }
+
+    res.json({
+      success: true,
+      message: "Checkout deleted successfully",
+      data: result.rows[0],
+    });
+
+  } catch (error) {
+    console.error("DELETE /api/checkouts/:id error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete checkout",
+    });
+  }
 });
 
 
-// =====================================================
+// ======================================================
 // DELETE ALL CHECKOUTS
-// =====================================================
+// DELETE /api/checkouts
+// ======================================================
 
 router.delete("/", async (req, res) => {
-    try {
-        await db.query("DELETE FROM checkouts");
+  try {
+    await pool.query("DELETE FROM checkouts");
 
-        res.json({
-            success: true,
-            message: "All checkout records deleted successfully"
-        });
+    res.json({
+      success: true,
+      message: "All checkout records deleted successfully",
+    });
 
-    } catch (error) {
-        console.error("Error deleting checkouts:", error);
+  } catch (error) {
+    console.error("DELETE /api/checkouts error:", error);
 
-        res.status(500).json({
-            success: false,
-            message: "Failed to delete checkout records"
-        });
-    }
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete all checkout records",
+    });
+  }
 });
 
+
+// ======================================================
+// EXPORT
+// ======================================================
 
 module.exports = router;
