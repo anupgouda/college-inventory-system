@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../../config/api";
+import { apiFetch } from "../../utils/api";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -22,7 +22,6 @@ type Indent = {
   status: "Pending" | "Approved" | "Rejected";
 };
 
-const API_URL = `${API_BASE_URL}/api/indents`;
 
 const getIndentId = (indent: Indent) => {
   return indent.id ?? indent._id;
@@ -55,7 +54,7 @@ function IndentMaster() {
     try {
       setLoading(true);
 
-      const response = await fetch(API_URL);
+      const response = await apiFetch("/api/indents");
 
       if (!response.ok) {
         throw new Error("Failed to fetch indents");
@@ -101,7 +100,7 @@ function IndentMaster() {
     }
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await apiFetch("/api/indents", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -155,7 +154,7 @@ function IndentMaster() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await apiFetch(`/api/indents/${id}`, {
         method: "DELETE",
       });
 
