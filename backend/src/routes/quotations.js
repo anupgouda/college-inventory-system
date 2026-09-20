@@ -230,6 +230,65 @@ router.patch(
       notes,
     } = req.body;
 
+        // --------------------------------------------------
+    // STATUS-ONLY UPDATE
+    // Used by Approve / Reject
+    // --------------------------------------------------
+
+    if (
+      status !== undefined &&
+      quotationNumber === undefined &&
+      vendorId === undefined &&
+      itemName === undefined &&
+      quantity === undefined &&
+      unitPrice === undefined
+    ) {
+      const allowedStatuses = [
+        "Pending",
+        "Approved",
+        "Rejected",
+        "Expired",
+      ];
+
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid quotation status",
+        });
+      }
+
+      const result = await pool.query(
+        `
+        UPDATE quotations
+        SET status = $1
+        WHERE id = $2
+        RETURNING
+          id,
+          quotation_number AS "quotationNumber",
+          vendor_id AS "vendorId",
+          quotation_date AS "quotationDate",
+          item_name AS "itemName",
+          quantity,
+          unit_price AS "unitPrice",
+          total_amount AS "totalAmount",
+          valid_until AS "validUntil",
+          status,
+          notes,
+          created_at AS "createdAt"
+        `,
+        [status, id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Quotation not found",
+        });
+      }
+
+      return res.json(result.rows[0]);
+    }
+
     if (
       !quotationNumber ||
       !vendorId ||
