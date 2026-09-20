@@ -744,12 +744,13 @@ function PurchaseOrder() {
 
                             {order.status === "Open" && (
                               <button
-                                onClick={() =>
-                                  updateStatus(
-                                    order,
-                                    "Approved"
-                                  )
-                                }
+  type="button"
+  onClick={() =>
+    updateStatus(
+      order,
+      "Approved"
+    )
+  }
                                 disabled={isUpdating}
                                 className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-bold text-blue-600 transition hover:bg-blue-50 disabled:opacity-50"
                               >
@@ -759,12 +760,13 @@ function PurchaseOrder() {
 
                             {order.status === "Approved" && (
                               <button
-                                onClick={() =>
-                                  updateStatus(
-                                    order,
-                                    "Received"
-                                  )
-                                }
+  type="button"
+  onClick={() =>
+    updateStatus(
+      order,
+      "Received"
+    )
+  }
                                 disabled={isUpdating}
                                 className="rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-600 transition hover:bg-emerald-50 disabled:opacity-50"
                               >
@@ -774,24 +776,25 @@ function PurchaseOrder() {
 
                             {(order.status === "Open" ||
                               order.status === "Approved") && (
-                              <button
-                                onClick={() =>
-                                  updateStatus(
-                                    order,
-                                    "Cancelled"
-                                  )
-                                }
+                                <button
+  type="button"
+  onClick={() =>
+    updateStatus(
+      order,
+      "Cancelled"
+    )
+  }
                                 disabled={isUpdating}
                                 className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
                               >
                                 Cancel
                               </button>
                             )}
-
                             <button
-                              onClick={() =>
-                                handleDelete(order)
-                              }
+  type="button"
+  onClick={() =>
+    handleDelete(order)
+  }
                               className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                               title="Delete purchase order"
                             >
