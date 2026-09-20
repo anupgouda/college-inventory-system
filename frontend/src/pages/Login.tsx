@@ -35,30 +35,25 @@ export default function Login() {
         throw new Error(data.message || "Login failed");
       }
 
-      // Store authentication data
-      // Make sure the backend actually returned a JWT
-if (!data.token) {
-  throw new Error("Login succeeded, but no authentication token was received.");
-}
+      if (!data.token) {
+        throw new Error(
+          "Login succeeded, but no authentication token was received."
+        );
+      }
 
-// Store authentication data
-localStorage.setItem("token", data.token);
-localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
-// Verify it was stored
-const savedToken = localStorage.getItem("token");
+      const savedToken = localStorage.getItem("token");
 
-if (!savedToken) {
-  throw new Error("Authentication token could not be stored.");
-}
+      if (!savedToken) {
+        throw new Error("Authentication token could not be stored.");
+      }
 
-// Go to dashboard
-navigate("/inventory/dashboard");
+      navigate("/inventory/dashboard");
     } catch (error) {
       setError(
-        error instanceof Error
-          ? error.message
-          : "Unable to login"
+        error instanceof Error ? error.message : "Unable to login"
       );
     } finally {
       setLoading(false);
@@ -66,73 +61,163 @@ navigate("/inventory/dashboard");
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-8">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-5 py-10">
 
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white">
-              College Inventory
-            </h1>
+      {/* Login Card */}
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl px-8 py-12 sm:px-14 sm:py-14">
 
-            <p className="text-slate-400 mt-2">
-              Management System
-            </p>
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <img
+            src="/gat-logo.png"
+            alt="Global Academy of Technology"
+            className="w-32 h-32 object-contain"
+          />
+        </div>
+
+        {/* College Name */}
+        <div className="text-center mb-12">
+          <h1 className="text-3xl sm:text-5xl font-bold text-slate-800 tracking-tight">
+            Global Academy of Technology
+          </h1>
+        </div>
+
+        {/* Login Form */}
+        <form
+          onSubmit={handleLogin}
+          className="max-w-3xl mx-auto"
+        >
+
+          {/* Email */}
+          <div className="mb-7">
+            <label
+              htmlFor="email"
+              className="block text-xl font-medium text-slate-700 mb-3"
+            >
+              Username or Email
+            </label>
+
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              required
+              autoComplete="email"
+              className="
+                w-full
+                px-5
+                py-4
+                text-lg
+                text-slate-800
+                bg-white
+                border
+                border-slate-300
+                rounded-xl
+                outline-none
+                transition
+                placeholder:text-slate-400
+                focus:border-blue-500
+                focus:ring-4
+                focus:ring-blue-100
+              "
+            />
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          {/* Password */}
+          <div className="mb-7">
+            <label
+              htmlFor="password"
+              className="block text-xl font-medium text-slate-700 mb-3"
+            >
+              Password
+            </label>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Email
-              </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+              autoComplete="current-password"
+              className="
+                w-full
+                px-5
+                py-4
+                text-lg
+                text-slate-800
+                bg-white
+                border
+                border-slate-300
+                rounded-xl
+                outline-none
+                transition
+                placeholder:text-slate-400
+                focus:border-blue-500
+                focus:ring-4
+                focus:ring-blue-100
+              "
+            />
+          </div>
 
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-                className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+          {/* Error */}
+          {error && (
+            <div className="mb-6 px-5 py-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+              {error}
             </div>
+          )}
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Password
-              </label>
+          {/* Sign In */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="
+              w-full
+              py-4
+              rounded-xl
+              bg-blue-600
+              hover:bg-blue-700
+              active:bg-blue-800
+              disabled:bg-blue-400
+              text-white
+              text-xl
+              font-semibold
+              transition
+              shadow-sm
+            "
+          >
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
 
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-                className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
+          {/* Bottom Links */}
+          <div className="flex items-center justify-between mt-8 text-lg">
 
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-blue-900 text-white font-semibold transition"
+              type="button"
+              onClick={() => {
+                setError("Password reset is not available yet.");
+              }}
+              className="text-blue-600 hover:text-blue-800 font-medium"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              Forgot Password?
             </button>
 
-          </form>
+            <button
+              type="button"
+              onClick={() => {
+                setError("Registration is not available from this page yet.");
+              }}
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Sign Up
+            </button>
 
-          <p className="text-center text-slate-500 text-sm mt-6">
-            College Inventory Management System
-          </p>
+          </div>
 
-        </div>
+        </form>
+
       </div>
     </div>
   );
