@@ -45,14 +45,9 @@ function App() {
 
             {/* Dashboard */}
             <Route
-              path="/"
-              element={
-                <Navigate
-                  to="/inventory/dashboard"
-                  replace
-                />
-              }
-            />
+  path="/"
+  element={<Navigate to="/login" replace />}
+/>
 
             <Route
               path="/inventory/dashboard"
