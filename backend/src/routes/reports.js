@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const pool = require("../db");
+const demoPool = pool.demoPool;
 
 const {
   authenticateToken,
@@ -13,6 +14,23 @@ const {
 
 router.use(authenticateToken);
 
+// ======================================================
+// DATABASE SELECTOR
+// ======================================================
+
+function getDatabase(req) {
+  const isDemo = req.user?.isDemo === true;
+
+  console.log(
+    "REPORT REQUEST:",
+    "userId =", req.user?.userId,
+    "role =", req.user?.role,
+    "isDemo =", req.user?.isDemo,
+    "database =", isDemo ? "DEMO" : "PUBLIC"
+  );
+
+  return isDemo ? demoPool : pool;
+}
 
 // ======================================================
 // GENERATE REPORT
@@ -72,7 +90,6 @@ router.get("/", async (req, res) => {
     // ==================================================
 
     switch (type) {
-
       case "indentMaster":
       case "indentApproval":
 
@@ -91,7 +108,6 @@ router.get("/", async (req, res) => {
         `;
 
         break;
-
 
       // ==================================================
       // STOCK ENTRY
@@ -118,7 +134,6 @@ router.get("/", async (req, res) => {
 
         break;
 
-
       // ==================================================
       // MATERIAL CHECKOUT
       // ==================================================
@@ -141,7 +156,6 @@ router.get("/", async (req, res) => {
         `;
 
         break;
-
 
       // ==================================================
       // ASSETS
@@ -171,7 +185,6 @@ router.get("/", async (req, res) => {
 
         break;
 
-
       // ==================================================
       // VENDORS
       // ==================================================
@@ -195,7 +208,6 @@ router.get("/", async (req, res) => {
         `;
 
         break;
-
 
       // ==================================================
       // PURCHASE ORDERS
@@ -227,7 +239,6 @@ router.get("/", async (req, res) => {
 
         break;
 
-
       // ==================================================
       // QUOTATIONS
       // ==================================================
@@ -257,7 +268,6 @@ router.get("/", async (req, res) => {
         `;
 
         break;
-
 
       // ==================================================
       // BILLS
@@ -292,7 +302,6 @@ router.get("/", async (req, res) => {
 
         break;
 
-
       // ==================================================
       // INVALID REPORT TYPE
       // ==================================================
@@ -309,7 +318,9 @@ router.get("/", async (req, res) => {
     // EXECUTE QUERY
     // ==================================================
 
-    const result = await pool.query(
+    const db = getDatabase(req);
+
+    const result = await db.query(
       query,
       values
     );
@@ -340,7 +351,6 @@ router.get("/", async (req, res) => {
     });
   }
 });
-
 
 // ======================================================
 // EXPORT
