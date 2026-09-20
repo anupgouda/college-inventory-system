@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../../config/api";
+import { apiFetch } from "../../utils/api";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -35,8 +35,6 @@ type PurchaseOrder = {
   notes?: string;
 };
 
-const PO_API = `${API_BASE_URL}/api/purchase-orders`;
-const VENDOR_API = `${API_BASE_URL}/api/vendors`;
 
 const formatDate = (date?: string) => {
   if (!date) return "-";
@@ -80,7 +78,7 @@ function PurchaseOrder() {
     try {
       setLoading(true);
 
-      const response = await fetch(PO_API);
+      const response = await apiFetch("/api/purchase-orders");
 
       if (!response.ok) {
         throw new Error("Failed to fetch purchase orders");
@@ -99,7 +97,7 @@ function PurchaseOrder() {
 
   const fetchVendors = async () => {
     try {
-      const response = await fetch(VENDOR_API);
+      const response = await apiFetch("/api/vendors");
 
       if (!response.ok) {
         throw new Error("Failed to fetch vendors");
@@ -183,7 +181,7 @@ function PurchaseOrder() {
     }
 
     try {
-      const response = await fetch(PO_API, {
+      const response = await apiFetch("/api/purchase-orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -248,8 +246,8 @@ function PurchaseOrder() {
     try {
       setUpdatingId(order.id);
 
-      const response = await fetch(
-        `${PO_API}/${order.id}/status`,
+      const response = await apiFetch(
+        `/api/purchase-orders/${order.id}/status`,
         {
           method: "PATCH",
           headers: {
@@ -294,8 +292,8 @@ function PurchaseOrder() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(
-        `${PO_API}/${order.id}`,
+      const response = await apiFetch(
+        `/api/purchase-orders/${order.id}`,
         {
           method: "DELETE",
         }
