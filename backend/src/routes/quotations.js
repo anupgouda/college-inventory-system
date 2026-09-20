@@ -515,7 +515,10 @@ router.delete(
 // DELETE /api/quotations
 // ======================================================
 
-router.delete("/", async (req, res) => {
+router.delete(
+  "/",
+  authorizeRoles("Admin", "Store Manager"),
+  async (req, res) => {
   try {
     const db = getDatabase(req);
 

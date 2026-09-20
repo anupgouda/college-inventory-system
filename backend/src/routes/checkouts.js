@@ -320,7 +320,10 @@ router.delete(
 // DELETE /api/checkouts
 // ======================================================
 
-router.delete("/", async (req, res) => {
+router.delete(
+  "/",
+  authorizeRoles("Admin", "Store Manager"),
+  async (req, res) => {
   try {
     const db = getDatabase(req);
 

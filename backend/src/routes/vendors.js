@@ -167,7 +167,10 @@ router.post(
 // PATCH /api/vendors/:id
 // ======================================================
 
-router.patch("/:id", async (req, res) => {
+router.patch(
+  "/:id",
+  authorizeRoles("Admin", "Store Manager"),
+  async (req, res) => {
   try {
     const db = getDatabase(req);
 
@@ -314,7 +317,10 @@ router.delete(
 // DELETE /api/vendors
 // ======================================================
 
-router.delete("/", async (req, res) => {
+router.delete(
+  "/",
+  authorizeRoles("Admin", "Store Manager"),
+  async (req, res) => {
   try {
     const db = getDatabase(req);
 

@@ -80,7 +80,11 @@ router.get("/", async (req, res) => {
 
 router.post(
   "/",
-  authorizeRoles("Admin", "Store Manager"),
+  authorizeRoles(
+  "Admin",
+  "IT",
+  "Store Manager"
+),
   async (req, res) => {
     try {
       const db = getDatabase(req);
@@ -191,7 +195,11 @@ router.post(
 
 router.delete(
   "/:id",
-  authorizeRoles("Admin", "Store Manager"),
+  authorizeRoles(
+  "Admin",
+  "IT",
+  "Store Manager"
+),
   async (req, res) => {
     try {
       const db = getDatabase(req);
@@ -245,7 +253,10 @@ router.delete(
 // DELETE /api/stock
 // ======================================================
 
-router.delete("/", async (req, res) => {
+router.delete(
+  "/",
+  authorizeRoles("Admin", "Store Manager"),
+  async (req, res) => {
   try {
     const db = getDatabase(req);
 

@@ -68,7 +68,15 @@ router.get("/", async (req, res) => {
 // ====================================================
 // CREATE INDENT
 // ====================================================
-router.post("/", async (req, res) => {
+router.post(
+  "/",
+  authorizeRoles(
+    "Admin",
+    "HOD",
+    "Faculty",
+    "Store Manager"
+  ),
+  async (req, res) => {
   try {
     const db = getDatabase(req);
 
@@ -142,7 +150,12 @@ router.post("/", async (req, res) => {
 // ====================================================
 router.patch(
   "/:id",
-  authorizeRoles("Admin", "HOD"),
+  authorizeRoles(
+  "Admin",
+  "HOD",
+  "Principal",
+  "Store Manager"
+),
   async (req, res) => {
     try {
       const db = getDatabase(req);
@@ -203,7 +216,10 @@ router.patch(
 // ====================================================
 // DELETE ONE INDENT
 // ====================================================
-router.delete("/:id", async (req, res) => {
+router.delete(
+  "/:id",
+  authorizeRoles("Admin", "Store Manager"),
+  async (req, res) => {
   try {
     const db = getDatabase(req);
 
@@ -244,7 +260,10 @@ router.delete("/:id", async (req, res) => {
 // ====================================================
 // DELETE ALL INDENTS
 // ====================================================
-router.delete("/", async (req, res) => {
+router.delete(
+  "/",
+  authorizeRoles("Admin", "Store Manager"),
+  async (req, res) => {
   try {
     const db = getDatabase(req);
 

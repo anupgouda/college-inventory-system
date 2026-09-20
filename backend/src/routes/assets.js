@@ -135,7 +135,12 @@ router.get("/:id", async (req, res) => {
 
 router.post(
   "/",
-  authorizeRoles("Admin", "IT", "Store Manager"),
+  authorizeRoles(
+  "Admin",
+  "HOD",
+  "IT",
+  "Store Manager"
+),
   async (req, res) => {
     try {
       const db = getDatabase(req);
@@ -304,7 +309,12 @@ router.post(
 
 router.patch(
   "/:id",
-  authorizeRoles("Admin", "IT", "Store Manager"),
+  authorizeRoles(
+  "Admin",
+  "HOD",
+  "IT",
+  "Store Manager"
+),
   async (req, res) => {
     try {
       const db = getDatabase(req);
@@ -471,7 +481,11 @@ router.patch(
 
 router.delete(
   "/:id",
-  authorizeRoles("Admin", "IT"),
+  authorizeRoles(
+  "Admin",
+  "IT",
+  "Store Manager"
+),
   async (req, res) => {
     try {
       const db = getDatabase(req);
@@ -518,7 +532,14 @@ router.delete(
 // DELETE /api/assets
 // ======================================================
 
-router.delete("/", async (req, res) => {
+router.delete(
+  "/",
+  authorizeRoles(
+    "Admin",
+    "IT",
+    "Store Manager"
+  ),
+  async (req, res) => {
   try {
     const db = getDatabase(req);
 
