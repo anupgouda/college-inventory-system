@@ -11,6 +11,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const handleDemoAccount = () => {
+    setEmail("demo@college.com");
+    setPassword("Demo@123456");
+    setError("");
+  };
+
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -62,8 +68,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center px-5 py-10">
-
-      {/* Login Card */}
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl px-8 py-12 sm:px-14 sm:py-14">
 
         {/* Logo */}
@@ -75,18 +79,19 @@ export default function Login() {
           />
         </div>
 
-        {/* College Name */}
+        {/* Title */}
         <div className="text-center mb-12">
           <h1 className="text-3xl sm:text-5xl font-bold text-slate-800 tracking-tight">
             Global Academy of Technology
           </h1>
+
+          <p className="mt-3 text-slate-500 text-lg">
+            College Inventory Management System
+          </p>
         </div>
 
         {/* Login Form */}
-        <form
-          onSubmit={handleLogin}
-          className="max-w-3xl mx-auto"
-        >
+        <form onSubmit={handleLogin} className="max-w-3xl mx-auto">
 
           {/* Email */}
           <div className="mb-7">
@@ -105,23 +110,7 @@ export default function Login() {
               placeholder="Enter your email"
               required
               autoComplete="email"
-              className="
-                w-full
-                px-5
-                py-4
-                text-lg
-                text-slate-800
-                bg-white
-                border
-                border-slate-300
-                rounded-xl
-                outline-none
-                transition
-                placeholder:text-slate-400
-                focus:border-blue-500
-                focus:ring-4
-                focus:ring-blue-100
-              "
+              className="w-full px-5 py-4 text-lg text-slate-800 bg-white border border-slate-300 rounded-xl outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             />
           </div>
 
@@ -142,23 +131,7 @@ export default function Login() {
               placeholder="Enter your password"
               required
               autoComplete="current-password"
-              className="
-                w-full
-                px-5
-                py-4
-                text-lg
-                text-slate-800
-                bg-white
-                border
-                border-slate-300
-                rounded-xl
-                outline-none
-                transition
-                placeholder:text-slate-400
-                focus:border-blue-500
-                focus:ring-4
-                focus:ring-blue-100
-              "
+              className="w-full px-5 py-4 text-lg text-slate-800 bg-white border border-slate-300 rounded-xl outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             />
           </div>
 
@@ -173,32 +146,37 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="
-              w-full
-              py-4
-              rounded-xl
-              bg-blue-600
-              hover:bg-blue-700
-              active:bg-blue-800
-              disabled:bg-blue-400
-              text-white
-              text-xl
-              font-semibold
-              transition
-              shadow-sm
-            "
+            className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-400 text-white text-xl font-semibold transition shadow-sm"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
 
-          {/* Bottom Links */}
-          <div className="flex items-center justify-between mt-8 text-lg">
+          {/* Demo Account */}
+          <div className="mt-7 p-5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+            <p className="text-slate-600 text-base mb-3">
+              Want to explore the system?
+            </p>
 
             <button
               type="button"
-              onClick={() => {
-                setError("Password reset is not available yet.");
-              }}
+              onClick={handleDemoAccount}
+              className="w-full py-3 rounded-xl border border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold transition"
+            >
+              🎮 Try Demo Account
+            </button>
+
+            <p className="mt-3 text-sm text-slate-500">
+              Demo access uses a restricted Faculty account.
+            </p>
+          </div>
+
+          {/* Links */}
+          <div className="flex items-center justify-between mt-8 text-lg">
+            <button
+              type="button"
+              onClick={() =>
+                setError("Password reset is not available yet.")
+              }
               className="text-blue-600 hover:text-blue-800 font-medium"
             >
               Forgot Password?
@@ -206,18 +184,15 @@ export default function Login() {
 
             <button
               type="button"
-              onClick={() => {
-                setError("Registration is not available from this page yet.");
-              }}
+              onClick={() =>
+                setError("Registration is not available from this page yet.")
+              }
               className="text-blue-600 hover:text-blue-800 font-medium"
             >
               Sign Up
             </button>
-
           </div>
-
         </form>
-
       </div>
     </div>
   );

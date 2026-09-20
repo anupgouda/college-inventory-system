@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const pool = require("../db");
+const demoPool = pool.demoPool;
 
 const {
   authenticateToken,
@@ -14,6 +15,15 @@ const {
 
 router.use(authenticateToken);
 
+// ======================================================
+// DATABASE SELECTION
+// Admin/normal users → public schema
+// Demo user → demo schema
+// ======================================================
+
+function getDatabase(req) {
+  return req.user?.isDemo === true ? demoPool : pool;
+}
 
 // ======================================================
 // DASHBOARD SUMMARY
@@ -22,35 +32,37 @@ router.use(authenticateToken);
 
 router.get("/", async (req, res) => {
   try {
-    const pendingApprovalsResult = await pool.query(`
+    const db = getDatabase(req);
+
+    const pendingApprovalsResult = await db.query(`
       SELECT COUNT(*) AS count
       FROM indents
       WHERE status = 'Pending'
     `);
 
-    const lowStockResult = await pool.query(`
+    const lowStockResult = await db.query(`
       SELECT COUNT(*) AS count
       FROM stock
       WHERE quantity <= 10
     `);
 
-    const openPurchaseOrdersResult = await pool.query(`
+    const openPurchaseOrdersResult = await db.query(`
       SELECT COUNT(*) AS count
       FROM purchase_orders
       WHERE status = 'Open'
     `);
 
-    const totalAssetsResult = await pool.query(`
+    const totalAssetsResult = await db.query(`
       SELECT COALESCE(SUM(quantity), 0) AS count
       FROM assets
     `);
 
-    const totalVendorsResult = await pool.query(`
+    const totalVendorsResult = await db.query(`
       SELECT COUNT(*) AS count
       FROM vendors
     `);
 
-    const totalStockResult = await pool.query(`
+    const totalStockResult = await db.query(`
       SELECT COALESCE(SUM(quantity), 0) AS count
       FROM stock
     `);
@@ -83,7 +95,6 @@ router.get("/", async (req, res) => {
         ),
       },
     });
-
   } catch (error) {
     console.error("Dashboard error:", error);
 
@@ -94,7 +105,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-
 // ======================================================
 // PENDING APPROVALS
 // GET /api/dashboard/pending-approvals
@@ -102,7 +112,9 @@ router.get("/", async (req, res) => {
 
 router.get("/pending-approvals", async (req, res) => {
   try {
-    const result = await pool.query(`
+    const db = getDatabase(req);
+
+    const result = await db.query(`
       SELECT
         id,
         date,
@@ -119,7 +131,6 @@ router.get("/pending-approvals", async (req, res) => {
       success: true,
       data: result.rows,
     });
-
   } catch (error) {
     console.error(
       "Pending approvals error:",
@@ -133,7 +144,6 @@ router.get("/pending-approvals", async (req, res) => {
   }
 });
 
-
 // ======================================================
 // OPEN PURCHASE ORDERS
 // GET /api/dashboard/open-purchase-orders
@@ -141,7 +151,9 @@ router.get("/pending-approvals", async (req, res) => {
 
 router.get("/open-purchase-orders", async (req, res) => {
   try {
-    const result = await pool.query(`
+    const db = getDatabase(req);
+
+    const result = await db.query(`
       SELECT
         po.id,
         po.po_number,
@@ -166,7 +178,6 @@ router.get("/open-purchase-orders", async (req, res) => {
       success: true,
       data: result.rows,
     });
-
   } catch (error) {
     console.error(
       "Open purchase orders error:",
@@ -180,7 +191,6 @@ router.get("/open-purchase-orders", async (req, res) => {
   }
 });
 
-
 // ======================================================
 // LOW STOCK
 // GET /api/dashboard/low-stock
@@ -188,7 +198,9 @@ router.get("/open-purchase-orders", async (req, res) => {
 
 router.get("/low-stock", async (req, res) => {
   try {
-    const result = await pool.query(`
+    const db = getDatabase(req);
+
+    const result = await db.query(`
       SELECT
         id,
         item_name AS "itemName",
@@ -209,7 +221,6 @@ router.get("/low-stock", async (req, res) => {
       success: true,
       data: result.rows,
     });
-
   } catch (error) {
     console.error(
       "Low stock error:",
@@ -222,7 +233,6 @@ router.get("/low-stock", async (req, res) => {
     });
   }
 });
-
 
 // ======================================================
 // EXPORT

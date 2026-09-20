@@ -1,88 +1,101 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const pool = require("../db");
 
 const router = express.Router();
+const pool = require("../db");
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  console.warn("WARNING: JWT_SECRET is not configured");
-}
-
-// POST /api/auth/register
+// ====================================================
+// REGISTER
+// ====================================================
 router.post("/register", async (req, res) => {
   try {
     const {
-      fullName,
+      full_name,
       email,
       password,
-      role = "Faculty",
-      department = null,
+      role,
+      department,
     } = req.body;
 
-    if (!fullName || !email || !password) {
+    if (!full_name || !email || !password || !role) {
       return res.status(400).json({
         success: false,
-        message: "Full name, email and password are required",
-      });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: "Password must contain at least 6 characters",
+        message: "Full name, email, password and role are required",
       });
     }
 
     const existingUser = await pool.query(
-      "SELECT id FROM users WHERE LOWER(email) = LOWER($1)",
-      [email.trim()]
+      "SELECT id FROM users WHERE email = $1",
+      [email]
     );
 
     if (existingUser.rows.length > 0) {
       return res.status(409).json({
         success: false,
-        message: "Email is already registered",
+        message: "User with this email already exists",
       });
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    const passwordHash = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      `INSERT INTO users
-       (full_name, email, password_hash, role, department)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, full_name, email, role, department, is_active, created_at`,
-      [
-        fullName.trim(),
-        email.trim().toLowerCase(),
-        passwordHash,
+      `
+      INSERT INTO users (
+        full_name,
+        email,
+        password_hash,
         role,
         department,
+        is_active,
+        is_demo
+      )
+      VALUES ($1, $2, $3, $4, $5, true, false)
+      RETURNING
+        id,
+        full_name,
+        email,
+        role,
+        department,
+        is_active,
+        is_demo
+      `,
+      [
+        full_name,
+        email,
+        passwordHash,
+        role,
+        department || null,
       ]
     );
 
+    const user = result.rows[0];
+
     res.status(201).json({
       success: true,
-      message: "User registered successfully",
-      user: result.rows[0],
+      message: "Registration successful",
+      user,
     });
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("Register error:", error);
 
     res.status(500).json({
       success: false,
-      message: "Unable to register user",
+      message: "Registration failed",
+      error: error.message,
     });
   }
 });
 
-// POST /api/auth/login
+// ====================================================
+// LOGIN
+// ====================================================
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const {
+      email,
+      password,
+    } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
@@ -92,17 +105,20 @@ router.post("/login", async (req, res) => {
     }
 
     const result = await pool.query(
-      `SELECT
+      `
+      SELECT
         id,
         full_name,
         email,
         password_hash,
         role,
         department,
-        is_active
-       FROM users
-       WHERE LOWER(email) = LOWER($1)`,
-      [email.trim()]
+        is_active,
+        is_demo
+      FROM users
+      WHERE email = $1
+      `,
+      [email]
     );
 
     if (result.rows.length === 0) {
@@ -133,24 +149,23 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    if (!JWT_SECRET) {
-      return res.status(500).json({
-        success: false,
-        message: "Authentication server configuration is missing",
-      });
-    }
-
+    // ==================================================
+    // IMPORTANT
+    // Include isDemo inside JWT
+    // ==================================================
     const token = jwt.sign(
       {
         userId: user.id,
         role: user.role,
+        isDemo: user.is_demo === true,
       },
-      JWT_SECRET,
+      process.env.JWT_SECRET,
       {
         expiresIn: "8h",
       }
     );
 
+    // Remove password before sending user data
     delete user.password_hash;
 
     res.json({
@@ -164,7 +179,8 @@ router.post("/login", async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Unable to login",
+      message: "Login failed",
+      error: error.message,
     });
   }
 });

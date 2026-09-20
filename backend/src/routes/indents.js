@@ -2,28 +2,45 @@ const express = require("express");
 const router = express.Router();
 
 const pool = require("../db");
+const demoPool = pool.demoPool;
 
 const {
   authenticateToken,
   authorizeRoles,
 } = require("../middleware/authMiddleware");
 
-// ======================================================
+// ----------------------------------------------------
 // AUTHENTICATION
-// All indent routes require a valid JWT token
-// ======================================================
-
+// ----------------------------------------------------
 router.use(authenticateToken);
 
+// ----------------------------------------------------
+// DATABASE SELECTOR
+// Demo user  -> demo schema
+// Normal user -> public schema
+// ----------------------------------------------------
+function getDatabase(req) {
+  const isDemo = req.user?.isDemo === true;
 
-// ======================================================
+  console.log(
+    "INDENT REQUEST:",
+    "userId =", req.user?.userId,
+    "role =", req.user?.role,
+    "isDemo =", req.user?.isDemo,
+    "database =", isDemo ? "DEMO" : "PUBLIC"
+  );
+
+  return isDemo ? demoPool : pool;
+}
+
+// ====================================================
 // GET ALL INDENTS
-// GET /api/indents
-// ======================================================
-
+// ====================================================
 router.get("/", async (req, res) => {
   try {
-    const result = await pool.query(`
+    const db = getDatabase(req);
+
+    const result = await db.query(`
       SELECT
         id,
         date,
@@ -37,35 +54,31 @@ router.get("/", async (req, res) => {
     `);
 
     res.json(result.rows);
-
   } catch (error) {
     console.error("GET /api/indents error:", error);
 
     res.status(500).json({
       success: false,
       message: "Failed to fetch indents",
+      error: error.message,
     });
   }
 });
 
-
-// ======================================================
+// ====================================================
 // CREATE INDENT
-// POST /api/indents
-// ======================================================
-
+// ====================================================
 router.post("/", async (req, res) => {
   try {
+    const db = getDatabase(req);
+
     const {
-      date,
       branch,
       description,
       qty,
-      status = "Pending",
     } = req.body;
 
-    // Validation
-    if (!branch || !description || !qty) {
+    if (!branch || !description || qty === undefined) {
       return res.status(400).json({
         success: false,
         message: "Branch, description and quantity are required",
@@ -79,24 +92,22 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `
-      INSERT INTO indents
-        (
-          date,
-          branch,
-          description,
-          qty,
-          status
-        )
-      VALUES
-        (
-          COALESCE($1::date, CURRENT_DATE),
-          $2,
-          $3,
-          $4,
-          $5
-        )
+      INSERT INTO indents (
+        date,
+        branch,
+        description,
+        qty,
+        status
+      )
+      VALUES (
+        CURRENT_DATE,
+        $1,
+        $2,
+        $3,
+        'Pending'
+      )
       RETURNING
         id,
         date,
@@ -107,115 +118,102 @@ router.post("/", async (req, res) => {
         created_at
       `,
       [
-        date || null,
         branch,
         description,
         Number(qty),
-        status,
       ]
     );
 
     res.status(201).json(result.rows[0]);
-
   } catch (error) {
     console.error("POST /api/indents error:", error);
 
     res.status(500).json({
       success: false,
       message: "Failed to create indent",
+      error: error.message,
     });
   }
 });
 
-
-// ======================================================
-// UPDATE INDENT
-// PATCH /api/indents/:id
-// ======================================================
-
+// ====================================================
+// UPDATE INDENT STATUS
+// ADMIN / HOD ONLY
+// ====================================================
 router.patch(
   "/:id",
   authorizeRoles("Admin", "HOD"),
   async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
+    try {
+      const db = getDatabase(req);
 
-    // Validate status
-    const allowedStatuses = [
-      "Pending",
-      "Approved",
-      "Rejected",
-    ];
+      const { id } = req.params;
+      const { status } = req.body;
 
-    if (!status || !allowedStatuses.includes(status)) {
-      return res.status(400).json({
+      const allowedStatuses = [
+        "Pending",
+        "Approved",
+        "Rejected",
+      ];
+
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid status",
+        });
+      }
+
+      const result = await db.query(
+        `
+        UPDATE indents
+        SET status = $1
+        WHERE id = $2
+        RETURNING
+          id,
+          date,
+          branch,
+          description,
+          qty,
+          status,
+          created_at
+        `,
+        [status, id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Indent not found",
+        });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("PATCH /api/indents/:id error:", error);
+
+      res.status(500).json({
         success: false,
-        message: "Invalid status",
+        message: "Failed to update indent",
+        error: error.message,
       });
     }
-
-    const result = await pool.query(
-      `
-      UPDATE indents
-      SET status = $1
-      WHERE id = $2
-      RETURNING
-        id,
-        date,
-        branch,
-        description,
-        qty,
-        status,
-        created_at
-      `,
-      [
-        status,
-        id,
-      ]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Indent not found",
-      });
-    }
-
-    res.json(result.rows[0]);
-
-  } catch (error) {
-    console.error("PATCH /api/indents/:id error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to update indent",
-    });
   }
-});
+);
 
-
-// ======================================================
-// DELETE SINGLE INDENT
-// DELETE /api/indents/:id
-// ======================================================
-
+// ====================================================
+// DELETE ONE INDENT
+// ====================================================
 router.delete("/:id", async (req, res) => {
   try {
+    const db = getDatabase(req);
+
     const { id } = req.params;
 
-    const result = await pool.query(
+    const result = await db.query(
       `
       DELETE FROM indents
       WHERE id = $1
-      RETURNING
-        id,
-        date,
-        branch,
-        description,
-        qty,
-        status,
-        created_at
+      RETURNING id
       `,
       [id]
     );
@@ -230,47 +228,41 @@ router.delete("/:id", async (req, res) => {
     res.json({
       success: true,
       message: "Indent deleted successfully",
-      data: result.rows[0],
+      id: result.rows[0].id,
     });
-
   } catch (error) {
     console.error("DELETE /api/indents/:id error:", error);
 
     res.status(500).json({
       success: false,
       message: "Failed to delete indent",
+      error: error.message,
     });
   }
 });
 
-
-// ======================================================
+// ====================================================
 // DELETE ALL INDENTS
-// DELETE /api/indents
-// ======================================================
-
+// ====================================================
 router.delete("/", async (req, res) => {
   try {
-    await pool.query("DELETE FROM indents");
+    const db = getDatabase(req);
+
+    await db.query("DELETE FROM indents");
 
     res.json({
       success: true,
       message: "All indents deleted successfully",
     });
-
   } catch (error) {
     console.error("DELETE /api/indents error:", error);
 
     res.status(500).json({
       success: false,
       message: "Failed to delete all indents",
+      error: error.message,
     });
   }
 });
-
-
-// ======================================================
-// EXPORT ROUTER
-// ======================================================
 
 module.exports = router;
