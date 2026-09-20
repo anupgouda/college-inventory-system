@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const pool = require("../db");
+const demoPool = pool.demoPool;
 
 const {
   authenticateToken,
@@ -14,6 +15,23 @@ const {
 
 router.use(authenticateToken);
 
+// ======================================================
+// DATABASE SELECTOR
+// ======================================================
+
+function getDatabase(req) {
+  const isDemo = req.user?.isDemo === true;
+
+  console.log(
+    "VENDOR REQUEST:",
+    "userId =", req.user?.userId,
+    "role =", req.user?.role,
+    "isDemo =", req.user?.isDemo,
+    "database =", isDemo ? "DEMO" : "PUBLIC"
+  );
+
+  return isDemo ? demoPool : pool;
+}
 
 // ======================================================
 // GET ALL VENDORS
@@ -22,7 +40,9 @@ router.use(authenticateToken);
 
 router.get("/", async (req, res) => {
   try {
-    const result = await pool.query(`
+    const db = getDatabase(req);
+
+    const result = await db.query(`
       SELECT
         id,
         vendor_code AS "vendorCode",
@@ -49,7 +69,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-
 // ======================================================
 // CREATE VENDOR
 // POST /api/vendors
@@ -59,88 +78,89 @@ router.post(
   "/",
   authorizeRoles("Admin", "Store Manager"),
   async (req, res) => {
-  try {
-    const {
-      vendorCode,
-      vendorName,
-      contactPerson,
-      email,
-      phone,
-      gstNumber,
-      address,
-    } = req.body;
+    try {
+      const db = getDatabase(req);
 
-    if (!vendorCode || !vendorName) {
-      return res.status(400).json({
-        success: false,
-        message: "Vendor code and vendor name are required",
-      });
-    }
-
-    const result = await pool.query(
-      `
-      INSERT INTO vendors
-      (
-        vendor_code,
-        vendor_name,
-        contact_person,
+      const {
+        vendorCode,
+        vendorName,
+        contactPerson,
         email,
         phone,
-        gst_number,
-        address
-      )
-      VALUES
-      (
-        $1,
-        $2,
-        $3,
-        $4,
-        $5,
-        $6,
-        $7
-      )
-      RETURNING
-        id,
-        vendor_code AS "vendorCode",
-        vendor_name AS "vendorName",
-        contact_person AS "contactPerson",
-        email,
-        phone,
-        gst_number AS "gstNumber",
+        gstNumber,
         address,
-        created_at AS "createdAt"
-      `,
-      [
-        vendorCode.trim(),
-        vendorName.trim(),
-        contactPerson || null,
-        email || null,
-        phone || null,
-        gstNumber || null,
-        address || null,
-      ]
-    );
+      } = req.body;
 
-    res.status(201).json(result.rows[0]);
+      if (!vendorCode || !vendorName) {
+        return res.status(400).json({
+          success: false,
+          message: "Vendor code and vendor name are required",
+        });
+      }
 
-  } catch (error) {
-    console.error("POST /api/vendors error:", error);
+      const result = await db.query(
+        `
+        INSERT INTO vendors
+        (
+          vendor_code,
+          vendor_name,
+          contact_person,
+          email,
+          phone,
+          gst_number,
+          address
+        )
+        VALUES
+        (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7
+        )
+        RETURNING
+          id,
+          vendor_code AS "vendorCode",
+          vendor_name AS "vendorName",
+          contact_person AS "contactPerson",
+          email,
+          phone,
+          gst_number AS "gstNumber",
+          address,
+          created_at AS "createdAt"
+        `,
+        [
+          vendorCode.trim(),
+          vendorName.trim(),
+          contactPerson || null,
+          email || null,
+          phone || null,
+          gstNumber || null,
+          address || null,
+        ]
+      );
 
-    // Duplicate vendor code
-    if (error.code === "23505") {
-      return res.status(409).json({
+      res.status(201).json(result.rows[0]);
+
+    } catch (error) {
+      console.error("POST /api/vendors error:", error);
+
+      if (error.code === "23505") {
+        return res.status(409).json({
+          success: false,
+          message: "Vendor code already exists",
+        });
+      }
+
+      res.status(500).json({
         success: false,
-        message: "Vendor code already exists",
+        message: "Failed to create vendor",
       });
     }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to create vendor",
-    });
   }
-});
-
+);
 
 // ======================================================
 // UPDATE VENDOR
@@ -149,6 +169,8 @@ router.post(
 
 router.patch("/:id", async (req, res) => {
   try {
+    const db = getDatabase(req);
+
     const { id } = req.params;
 
     const {
@@ -168,7 +190,7 @@ router.patch("/:id", async (req, res) => {
       });
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `
       UPDATE vendors
       SET
@@ -229,7 +251,6 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
-
 // ======================================================
 // DELETE VENDOR
 // DELETE /api/vendors/:id
@@ -239,53 +260,54 @@ router.delete(
   "/:id",
   authorizeRoles("Admin", "Store Manager"),
   async (req, res) => {
-  try {
-    const { id } = req.params;
+    try {
+      const db = getDatabase(req);
 
-    const result = await pool.query(
-      `
-      DELETE FROM vendors
-      WHERE id = $1
-      RETURNING
-        id,
-        vendor_code AS "vendorCode",
-        vendor_name AS "vendorName"
-      `,
-      [id]
-    );
+      const { id } = req.params;
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({
+      const result = await db.query(
+        `
+        DELETE FROM vendors
+        WHERE id = $1
+        RETURNING
+          id,
+          vendor_code AS "vendorCode",
+          vendor_name AS "vendorName"
+        `,
+        [id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Vendor not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Vendor deleted successfully",
+        data: result.rows[0],
+      });
+
+    } catch (error) {
+      console.error("DELETE /api/vendors/:id error:", error);
+
+      if (error.code === "23503") {
+        return res.status(409).json({
+          success: false,
+          message:
+            "Vendor cannot be deleted because it is being used by another record",
+        });
+      }
+
+      res.status(500).json({
         success: false,
-        message: "Vendor not found",
+        message: "Failed to delete vendor",
       });
     }
-
-    res.json({
-      success: true,
-      message: "Vendor deleted successfully",
-      data: result.rows[0],
-    });
-
-  } catch (error) {
-    console.error("DELETE /api/vendors/:id error:", error);
-
-    // Vendor is referenced by another table
-    if (error.code === "23503") {
-      return res.status(409).json({
-        success: false,
-        message:
-          "Vendor cannot be deleted because it is being used by another record",
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete vendor",
-    });
   }
-});
-
+);
 
 // ======================================================
 // DELETE ALL VENDORS
@@ -294,7 +316,9 @@ router.delete(
 
 router.delete("/", async (req, res) => {
   try {
-    await pool.query("DELETE FROM vendors");
+    const db = getDatabase(req);
+
+    await db.query("DELETE FROM vendors");
 
     res.json({
       success: true,
@@ -318,7 +342,6 @@ router.delete("/", async (req, res) => {
     });
   }
 });
-
 
 // ======================================================
 // EXPORT

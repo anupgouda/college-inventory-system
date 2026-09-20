@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const pool = require("../db");
+const demoPool = pool.demoPool;
 
 const {
   authenticateToken,
@@ -14,6 +15,26 @@ const {
 
 router.use(authenticateToken);
 
+// ======================================================
+// DATABASE SELECTOR
+//
+// Demo user   -> demo.assets
+// Normal user -> public.assets
+// ======================================================
+
+function getDatabase(req) {
+  const isDemo = req.user?.isDemo === true;
+
+  console.log(
+    "ASSET REQUEST:",
+    "userId =", req.user?.userId,
+    "role =", req.user?.role,
+    "isDemo =", req.user?.isDemo,
+    "database =", isDemo ? "DEMO" : "PUBLIC"
+  );
+
+  return isDemo ? demoPool : pool;
+}
 
 // ======================================================
 // GET ALL ASSETS
@@ -22,7 +43,9 @@ router.use(authenticateToken);
 
 router.get("/", async (req, res) => {
   try {
-    const result = await pool.query(`
+    const db = getDatabase(req);
+
+    const result = await db.query(`
       SELECT
         id,
         asset_code AS "assetCode",
@@ -43,7 +66,6 @@ router.get("/", async (req, res) => {
     `);
 
     res.json(result.rows);
-
   } catch (error) {
     console.error("GET /api/assets error:", error);
 
@@ -54,7 +76,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-
 // ======================================================
 // GET SINGLE ASSET
 // GET /api/assets/:id
@@ -62,9 +83,11 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
+    const db = getDatabase(req);
+
     const { id } = req.params;
 
-    const result = await pool.query(
+    const result = await db.query(
       `
       SELECT
         id,
@@ -95,7 +118,6 @@ router.get("/:id", async (req, res) => {
     }
 
     res.json(result.rows[0]);
-
   } catch (error) {
     console.error("GET /api/assets/:id error:", error);
 
@@ -106,7 +128,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-
 // ======================================================
 // CREATE ASSET
 // POST /api/assets
@@ -116,164 +137,165 @@ router.post(
   "/",
   authorizeRoles("Admin", "IT", "Store Manager"),
   async (req, res) => {
-  try {
-    const {
-      assetCode,
-      assetName,
-      category,
-      department,
-      location,
-      quantity = 1,
-      assignedTo,
-      purchaseDate,
-      purchasePrice,
-      condition = "Good",
-      status = "Available",
-      description,
-    } = req.body;
+    try {
+      const db = getDatabase(req);
 
-    if (
-      !assetCode ||
-      !assetName ||
-      !category ||
-      !department
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Asset code, asset name, category and department are required",
-      });
-    }
-
-    if (Number(quantity) <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Quantity must be greater than 0",
-      });
-    }
-
-    if (
-      purchasePrice !== undefined &&
-      purchasePrice !== null &&
-      Number(purchasePrice) < 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Purchase price cannot be negative",
-      });
-    }
-
-    const allowedConditions = [
-      "New",
-      "Good",
-      "Fair",
-      "Damaged",
-    ];
-
-    if (!allowedConditions.includes(condition)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid asset condition",
-      });
-    }
-
-    const allowedStatuses = [
-      "Available",
-      "Assigned",
-      "Under Maintenance",
-      "Disposed",
-    ];
-
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid asset status",
-      });
-    }
-
-    const result = await pool.query(
-      `
-      INSERT INTO assets
-      (
-        asset_code,
-        asset_name,
+      const {
+        assetCode,
+        assetName,
         category,
         department,
         location,
-        quantity,
-        assigned_to,
-        purchase_date,
-        purchase_price,
-        condition,
-        status,
-        description
-      )
-      VALUES
-      (
-        $1,
-        $2,
-        $3,
-        $4,
-        $5,
-        $6,
-        $7,
-        $8,
-        $9,
-        $10,
-        $11,
-        $12
-      )
-      RETURNING
-        id,
-        asset_code AS "assetCode",
-        asset_name AS "assetName",
-        category,
-        department,
-        location,
-        quantity,
-        assigned_to AS "assignedTo",
-        purchase_date AS "purchaseDate",
-        purchase_price AS "purchasePrice",
-        condition,
-        status,
+        quantity = 1,
+        assignedTo,
+        purchaseDate,
+        purchasePrice,
+        condition = "Good",
+        status = "Available",
         description,
-        created_at AS "createdAt"
-      `,
-      [
-        assetCode.trim(),
-        assetName.trim(),
-        category.trim(),
-        department.trim(),
-        location || null,
-        Number(quantity),
-        assignedTo || null,
-        purchaseDate || null,
-        purchasePrice ?? null,
-        condition,
-        status,
-        description || null,
-      ]
-    );
+      } = req.body;
 
-    res.status(201).json(result.rows[0]);
+      if (
+        !assetCode ||
+        !assetName ||
+        !category ||
+        !department
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Asset code, asset name, category and department are required",
+        });
+      }
 
-  } catch (error) {
-    console.error("POST /api/assets error:", error);
+      if (Number(quantity) <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Quantity must be greater than 0",
+        });
+      }
 
-    if (error.code === "23505") {
-      return res.status(409).json({
+      if (
+        purchasePrice !== undefined &&
+        purchasePrice !== null &&
+        Number(purchasePrice) < 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Purchase price cannot be negative",
+        });
+      }
+
+      const allowedConditions = [
+        "New",
+        "Good",
+        "Fair",
+        "Damaged",
+      ];
+
+      if (!allowedConditions.includes(condition)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid asset condition",
+        });
+      }
+
+      const allowedStatuses = [
+        "Available",
+        "Assigned",
+        "Under Maintenance",
+        "Disposed",
+      ];
+
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid asset status",
+        });
+      }
+
+      const result = await db.query(
+        `
+        INSERT INTO assets
+        (
+          asset_code,
+          asset_name,
+          category,
+          department,
+          location,
+          quantity,
+          assigned_to,
+          purchase_date,
+          purchase_price,
+          condition,
+          status,
+          description
+        )
+        VALUES
+        (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7,
+          $8,
+          $9,
+          $10,
+          $11,
+          $12
+        )
+        RETURNING
+          id,
+          asset_code AS "assetCode",
+          asset_name AS "assetName",
+          category,
+          department,
+          location,
+          quantity,
+          assigned_to AS "assignedTo",
+          purchase_date AS "purchaseDate",
+          purchase_price AS "purchasePrice",
+          condition,
+          status,
+          description,
+          created_at AS "createdAt"
+        `,
+        [
+          assetCode.trim(),
+          assetName.trim(),
+          category.trim(),
+          department.trim(),
+          location || null,
+          Number(quantity),
+          assignedTo || null,
+          purchaseDate || null,
+          purchasePrice ?? null,
+          condition,
+          status,
+          description || null,
+        ]
+      );
+
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error("POST /api/assets error:", error);
+
+      if (error.code === "23505") {
+        return res.status(409).json({
+          success: false,
+          message: "Asset code already exists",
+        });
+      }
+
+      res.status(500).json({
         success: false,
-        message: "Asset code already exists",
+        message: "Failed to create asset",
       });
     }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to create asset",
-    });
   }
-});
-
+);
 
 // ======================================================
 // UPDATE ASSET
@@ -284,162 +306,163 @@ router.patch(
   "/:id",
   authorizeRoles("Admin", "IT", "Store Manager"),
   async (req, res) => {
-  try {
-    const { id } = req.params;
+    try {
+      const db = getDatabase(req);
 
-    const {
-      assetCode,
-      assetName,
-      category,
-      department,
-      location,
-      quantity,
-      assignedTo,
-      purchaseDate,
-      purchasePrice,
-      condition,
-      status,
-      description,
-    } = req.body;
+      const { id } = req.params;
 
-    if (
-      !assetCode ||
-      !assetName ||
-      !category ||
-      !department ||
-      quantity === undefined ||
-      !condition ||
-      !status
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Asset code, asset name, category, department, quantity, condition and status are required",
-      });
-    }
-
-    if (Number(quantity) <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Quantity must be greater than 0",
-      });
-    }
-
-    if (
-      purchasePrice !== undefined &&
-      purchasePrice !== null &&
-      Number(purchasePrice) < 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Purchase price cannot be negative",
-      });
-    }
-
-    const allowedConditions = [
-      "New",
-      "Good",
-      "Fair",
-      "Damaged",
-    ];
-
-    if (!allowedConditions.includes(condition)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid asset condition",
-      });
-    }
-
-    const allowedStatuses = [
-      "Available",
-      "Assigned",
-      "Under Maintenance",
-      "Disposed",
-    ];
-
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid asset status",
-      });
-    }
-
-    const result = await pool.query(
-      `
-      UPDATE assets
-      SET
-        asset_code = $1,
-        asset_name = $2,
-        category = $3,
-        department = $4,
-        location = $5,
-        quantity = $6,
-        assigned_to = $7,
-        purchase_date = $8,
-        purchase_price = $9,
-        condition = $10,
-        status = $11,
-        description = $12
-      WHERE id = $13
-      RETURNING
-        id,
-        asset_code AS "assetCode",
-        asset_name AS "assetName",
+      const {
+        assetCode,
+        assetName,
         category,
         department,
         location,
         quantity,
-        assigned_to AS "assignedTo",
-        purchase_date AS "purchaseDate",
-        purchase_price AS "purchasePrice",
+        assignedTo,
+        purchaseDate,
+        purchasePrice,
         condition,
         status,
         description,
-        created_at AS "createdAt"
-      `,
-      [
-        assetCode.trim(),
-        assetName.trim(),
-        category.trim(),
-        department.trim(),
-        location || null,
-        Number(quantity),
-        assignedTo || null,
-        purchaseDate || null,
-        purchasePrice ?? null,
-        condition,
-        status,
-        description || null,
-        id,
-      ]
-    );
+      } = req.body;
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({
+      if (
+        !assetCode ||
+        !assetName ||
+        !category ||
+        !department ||
+        quantity === undefined ||
+        !condition ||
+        !status
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Asset code, asset name, category, department, quantity, condition and status are required",
+        });
+      }
+
+      if (Number(quantity) <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Quantity must be greater than 0",
+        });
+      }
+
+      if (
+        purchasePrice !== undefined &&
+        purchasePrice !== null &&
+        Number(purchasePrice) < 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Purchase price cannot be negative",
+        });
+      }
+
+      const allowedConditions = [
+        "New",
+        "Good",
+        "Fair",
+        "Damaged",
+      ];
+
+      if (!allowedConditions.includes(condition)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid asset condition",
+        });
+      }
+
+      const allowedStatuses = [
+        "Available",
+        "Assigned",
+        "Under Maintenance",
+        "Disposed",
+      ];
+
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid asset status",
+        });
+      }
+
+      const result = await db.query(
+        `
+        UPDATE assets
+        SET
+          asset_code = $1,
+          asset_name = $2,
+          category = $3,
+          department = $4,
+          location = $5,
+          quantity = $6,
+          assigned_to = $7,
+          purchase_date = $8,
+          purchase_price = $9,
+          condition = $10,
+          status = $11,
+          description = $12
+        WHERE id = $13
+        RETURNING
+          id,
+          asset_code AS "assetCode",
+          asset_name AS "assetName",
+          category,
+          department,
+          location,
+          quantity,
+          assigned_to AS "assignedTo",
+          purchase_date AS "purchaseDate",
+          purchase_price AS "purchasePrice",
+          condition,
+          status,
+          description,
+          created_at AS "createdAt"
+        `,
+        [
+          assetCode.trim(),
+          assetName.trim(),
+          category.trim(),
+          department.trim(),
+          location || null,
+          Number(quantity),
+          assignedTo || null,
+          purchaseDate || null,
+          purchasePrice ?? null,
+          condition,
+          status,
+          description || null,
+          id,
+        ]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Asset not found",
+        });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("PATCH /api/assets/:id error:", error);
+
+      if (error.code === "23505") {
+        return res.status(409).json({
+          success: false,
+          message: "Asset code already exists",
+        });
+      }
+
+      res.status(500).json({
         success: false,
-        message: "Asset not found",
+        message: "Failed to update asset",
       });
     }
-
-    res.json(result.rows[0]);
-
-  } catch (error) {
-    console.error("PATCH /api/assets/:id error:", error);
-
-    if (error.code === "23505") {
-      return res.status(409).json({
-        success: false,
-        message: "Asset code already exists",
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to update asset",
-    });
   }
-});
-
+);
 
 // ======================================================
 // DELETE ASSET
@@ -450,44 +473,45 @@ router.delete(
   "/:id",
   authorizeRoles("Admin", "IT"),
   async (req, res) => {
-  try {
-    const { id } = req.params;
+    try {
+      const db = getDatabase(req);
 
-    const result = await pool.query(
-      `
-      DELETE FROM assets
-      WHERE id = $1
-      RETURNING
-        id,
-        asset_code AS "assetCode",
-        asset_name AS "assetName"
-      `,
-      [id]
-    );
+      const { id } = req.params;
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({
+      const result = await db.query(
+        `
+        DELETE FROM assets
+        WHERE id = $1
+        RETURNING
+          id,
+          asset_code AS "assetCode",
+          asset_name AS "assetName"
+        `,
+        [id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Asset not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Asset deleted successfully",
+        data: result.rows[0],
+      });
+    } catch (error) {
+      console.error("DELETE /api/assets/:id error:", error);
+
+      res.status(500).json({
         success: false,
-        message: "Asset not found",
+        message: "Failed to delete asset",
       });
     }
-
-    res.json({
-      success: true,
-      message: "Asset deleted successfully",
-      data: result.rows[0],
-    });
-
-  } catch (error) {
-    console.error("DELETE /api/assets/:id error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete asset",
-    });
   }
-});
-
+);
 
 // ======================================================
 // DELETE ALL ASSETS
@@ -496,13 +520,14 @@ router.delete(
 
 router.delete("/", async (req, res) => {
   try {
-    await pool.query("DELETE FROM assets");
+    const db = getDatabase(req);
+
+    await db.query("DELETE FROM assets");
 
     res.json({
       success: true,
       message: "All assets deleted successfully",
     });
-
   } catch (error) {
     console.error("DELETE /api/assets error:", error);
 
@@ -512,7 +537,6 @@ router.delete("/", async (req, res) => {
     });
   }
 });
-
 
 // ======================================================
 // EXPORT
