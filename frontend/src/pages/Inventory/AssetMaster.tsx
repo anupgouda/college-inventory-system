@@ -260,7 +260,7 @@ function AssetMaster() {
       const response = await apiFetch(
         `/api/assets/${asset.id}`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
