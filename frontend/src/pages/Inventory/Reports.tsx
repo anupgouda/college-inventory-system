@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../../config/api";
+import { apiFetch } from "../../utils/api";
 import { useState } from "react";
 import {
   FileBarChart,
@@ -11,7 +11,6 @@ import {
   X,
 } from "lucide-react";
 
-const REPORT_API = `${API_BASE_URL}/api/reports`;
 
 type ReportType =
   | "indentMaster"
@@ -119,7 +118,7 @@ function Reports() {
         endDate,
       });
 
-      const response = await fetch(`${REPORT_API}?${params}`);
+      const response = await apiFetch(`/api/reports?${params}`);
 
       const result: ReportResponse = await response.json();
 
