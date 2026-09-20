@@ -267,7 +267,7 @@ function Quotation() {
     status: "Approved" | "Rejected"
   ) => {
     try {
-      const response = await apiFetch(`/api/quotations/${id}/status`, {
+      const response = await apiFetch(`/api/quotations/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
