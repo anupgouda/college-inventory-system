@@ -186,7 +186,7 @@ function MaterialCheckout() {
       setUpdatingId(checkout.id);
 
       const response = await apiFetch(
-        `/api/checkouts/${checkout.id}/status`,
+        `/api/checkouts/${checkout.id}`,
         {
           method: "PATCH",
           headers: {
