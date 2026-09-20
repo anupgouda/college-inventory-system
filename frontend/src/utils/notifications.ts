@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../config/api";
+import { apiFetch } from "./api";
 
 const SETTINGS_KEY = "collegeInventorySettings";
 const READ_KEY = "collegeInventoryReadNotifications";
@@ -114,9 +114,7 @@ async function getApiData(
   endpoint: string
 ): Promise<any[]> {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}${endpoint}`
-    );
+    const response = await apiFetch(endpoint);
 
     if (!response.ok) {
       return [];
