@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../../config/api";
+import { apiFetch } from "../../utils/api";
 import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
@@ -14,10 +14,6 @@ import {
   CreditCard,
   X,
 } from "lucide-react";
-
-const BILL_API = `${API_BASE_URL}/api/bills`;
-const VENDOR_API = `${API_BASE_URL}/api/vendors`;
-const PO_API = `${API_BASE_URL}/api/purchase-orders`;
 
 type Vendor = {
   id: number;
@@ -99,7 +95,7 @@ function BillMaster() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(BILL_API);
+      const response = await apiFetch("/api/bills");
 
       if (!response.ok) {
         throw new Error("Failed to load bills");
@@ -118,7 +114,7 @@ function BillMaster() {
 
   const fetchVendors = async () => {
     try {
-      const response = await fetch(VENDOR_API);
+      const response = await apiFetch("/api/vendors");
 
       if (!response.ok) {
         throw new Error("Failed to load vendors");
@@ -134,7 +130,7 @@ function BillMaster() {
 
   const fetchPurchaseOrders = async () => {
     try {
-      const response = await fetch(PO_API);
+      const response = await apiFetch("/api/purchase-orders");
 
       if (!response.ok) {
         throw new Error("Failed to load purchase orders");
@@ -292,7 +288,7 @@ function BillMaster() {
       setSaving(true);
       setError("");
 
-      const response = await fetch(BILL_API, {
+      const response = await apiFetch("/api/bills", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -337,7 +333,7 @@ function BillMaster() {
     status: "Approved" | "Paid" | "Cancelled"
   ) => {
     try {
-      const response = await fetch(`${BILL_API}/${id}/status`, {
+      const response = await apiFetch(`/api/bills/${id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -371,7 +367,7 @@ function BillMaster() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`${BILL_API}/${id}`, {
+      const response = await apiFetch(`/api/bills/${id}`, {
         method: "DELETE",
       });
 
