@@ -39,6 +39,8 @@ function getDatabase(req) {
 // ======================================================
 // GET ALL CHECKOUTS
 // GET /api/checkouts
+//
+// All authenticated users can view checkouts.
 // ======================================================
 
 router.get("/", async (req, res) => {
@@ -74,6 +76,13 @@ router.get("/", async (req, res) => {
 // ======================================================
 // CREATE CHECKOUT
 // POST /api/checkouts
+//
+// Allowed:
+// Admin
+// Faculty
+// HOD
+// IT
+// Store Manager
 // ======================================================
 
 router.post(
@@ -192,6 +201,13 @@ router.post(
 // ======================================================
 // UPDATE CHECKOUT STATUS
 // PATCH /api/checkouts/:id
+//
+// Allowed:
+// Admin
+// Faculty
+// HOD
+// IT
+// Store Manager
 // ======================================================
 
 router.patch(
@@ -251,7 +267,10 @@ router.patch(
 
       res.json(result.rows[0]);
     } catch (error) {
-      console.error("PATCH /api/checkouts/:id error:", error);
+      console.error(
+        "PATCH /api/checkouts/:id error:",
+        error
+      );
 
       res.status(500).json({
         success: false,
@@ -262,13 +281,20 @@ router.patch(
 );
 
 // ======================================================
-// DELETE CHECKOUT
+// DELETE SINGLE CHECKOUT
 // DELETE /api/checkouts/:id
+//
+// Allowed:
+// Admin
+// Store Manager
 // ======================================================
 
 router.delete(
   "/:id",
-  authorizeRoles("Admin", "Store Manager"),
+  authorizeRoles(
+    "Admin",
+    "Store Manager"
+  ),
   async (req, res) => {
     try {
       const db = getDatabase(req);
@@ -305,7 +331,10 @@ router.delete(
         data: result.rows[0],
       });
     } catch (error) {
-      console.error("DELETE /api/checkouts/:id error:", error);
+      console.error(
+        "DELETE /api/checkouts/:id error:",
+        error
+      );
 
       res.status(500).json({
         success: false,
@@ -318,30 +347,41 @@ router.delete(
 // ======================================================
 // DELETE ALL CHECKOUTS
 // DELETE /api/checkouts
+//
+// Allowed:
+// Admin
+// Store Manager
 // ======================================================
 
 router.delete(
   "/",
-  authorizeRoles("Admin", "Store Manager"),
+  authorizeRoles(
+    "Admin",
+    "Store Manager"
+  ),
   async (req, res) => {
-  try {
-    const db = getDatabase(req);
+    try {
+      const db = getDatabase(req);
 
-    await db.query("DELETE FROM checkouts");
+      await db.query("DELETE FROM checkouts");
 
-    res.json({
-      success: true,
-      message: "All checkout records deleted successfully",
-    });
-  } catch (error) {
-    console.error("DELETE /api/checkouts error:", error);
+      res.json({
+        success: true,
+        message: "All checkout records deleted successfully",
+      });
+    } catch (error) {
+      console.error(
+        "DELETE /api/checkouts error:",
+        error
+      );
 
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete all checkout records",
-    });
+      res.status(500).json({
+        success: false,
+        message: "Failed to delete all checkout records",
+      });
+    }
   }
-});
+);
 
 // ======================================================
 // EXPORT

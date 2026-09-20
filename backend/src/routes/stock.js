@@ -39,6 +39,8 @@ function getDatabase(req) {
 // ======================================================
 // GET ALL STOCK
 // GET /api/stock
+//
+// All authenticated users can view stock.
 // ======================================================
 
 router.get("/", async (req, res) => {
@@ -76,15 +78,20 @@ router.get("/", async (req, res) => {
 // ======================================================
 // ADD STOCK
 // POST /api/stock
+//
+// Allowed:
+// Admin
+// IT
+// Store Manager
 // ======================================================
 
 router.post(
   "/",
   authorizeRoles(
-  "Admin",
-  "IT",
-  "Store Manager"
-),
+    "Admin",
+    "IT",
+    "Store Manager"
+  ),
   async (req, res) => {
     try {
       const db = getDatabase(req);
@@ -100,6 +107,10 @@ router.post(
         purchaseOrder,
       } = req.body;
 
+      // ----------------------------------------------
+      // Required field validation
+      // ----------------------------------------------
+
       if (
         !itemName ||
         quantity === undefined ||
@@ -113,6 +124,10 @@ router.post(
         });
       }
 
+      // ----------------------------------------------
+      // Quantity validation
+      // ----------------------------------------------
+
       if (Number(quantity) <= 0) {
         return res.status(400).json({
           success: false,
@@ -120,12 +135,20 @@ router.post(
         });
       }
 
+      // ----------------------------------------------
+      // Unit price validation
+      // ----------------------------------------------
+
       if (Number(unitPrice) < 0) {
         return res.status(400).json({
           success: false,
           message: "Unit price cannot be negative",
         });
       }
+
+      // ----------------------------------------------
+      // Insert stock
+      // ----------------------------------------------
 
       const result = await db.query(
         `
@@ -191,15 +214,20 @@ router.post(
 // ======================================================
 // DELETE SINGLE STOCK
 // DELETE /api/stock/:id
+//
+// Allowed:
+// Admin
+// Store Manager
+//
+// IT cannot delete stock.
 // ======================================================
 
 router.delete(
   "/:id",
   authorizeRoles(
-  "Admin",
-  "IT",
-  "Store Manager"
-),
+    "Admin",
+    "Store Manager"
+  ),
   async (req, res) => {
     try {
       const db = getDatabase(req);
@@ -238,7 +266,10 @@ router.delete(
         data: result.rows[0],
       });
     } catch (error) {
-      console.error("DELETE /api/stock/:id error:", error);
+      console.error(
+        "DELETE /api/stock/:id error:",
+        error
+      );
 
       res.status(500).json({
         success: false,
@@ -251,30 +282,43 @@ router.delete(
 // ======================================================
 // DELETE ALL STOCK
 // DELETE /api/stock
+//
+// Allowed:
+// Admin
+// Store Manager
+//
+// IT cannot delete all stock.
 // ======================================================
 
 router.delete(
   "/",
-  authorizeRoles("Admin", "Store Manager"),
+  authorizeRoles(
+    "Admin",
+    "Store Manager"
+  ),
   async (req, res) => {
-  try {
-    const db = getDatabase(req);
+    try {
+      const db = getDatabase(req);
 
-    await db.query("DELETE FROM stock");
+      await db.query("DELETE FROM stock");
 
-    res.json({
-      success: true,
-      message: "All stock deleted successfully",
-    });
-  } catch (error) {
-    console.error("DELETE /api/stock error:", error);
+      res.json({
+        success: true,
+        message: "All stock deleted successfully",
+      });
+    } catch (error) {
+      console.error(
+        "DELETE /api/stock error:",
+        error
+      );
 
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete all stock",
-    });
+      res.status(500).json({
+        success: false,
+        message: "Failed to delete all stock",
+      });
+    }
   }
-});
+);
 
 // ======================================================
 // EXPORT
