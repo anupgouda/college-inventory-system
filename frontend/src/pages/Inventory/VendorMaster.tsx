@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../../config/api";
+import { apiFetch } from "../../utils/api";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -24,7 +24,6 @@ type Vendor = {
   address?: string;
 };
 
-const API_URL = `${API_BASE_URL}/api/vendors`;
 
 function VendorMaster() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -45,7 +44,7 @@ function VendorMaster() {
     try {
       setLoading(true);
 
-      const response = await fetch(API_URL);
+      const response = await apiFetch("/api/vendors");
 
       if (!response.ok) {
         throw new Error("Failed to fetch vendors");
@@ -99,7 +98,7 @@ function VendorMaster() {
     }
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await apiFetch("/api/vendors", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -159,8 +158,8 @@ function VendorMaster() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(
-        `${API_URL}/${vendor.id}`,
+      const response = await apiFetch(
+        `/api/vendors/${vendor.id}`,
         {
           method: "DELETE",
         }
