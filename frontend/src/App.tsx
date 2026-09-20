@@ -10,6 +10,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
 
 import Login from "./pages/Login";
+import Users from "./pages/Users";
 
 import Dashboard from "./pages/Inventory/Dashboard";
 import IndentMaster from "./pages/Inventory/IndentMaster";
@@ -324,10 +325,29 @@ function App() {
               }
             >
               <Route
-                path="/settings"
-                element={<Settings />}
-              />
-            </Route>
+  path="/settings"
+  element={<Settings />}
+/>
+
+{/* =================================================
+    USER MANAGEMENT
+    ADMIN ONLY
+================================================== */}
+
+<Route
+  element={
+    <RoleProtectedRoute
+      allowedRoles={["Admin"]}
+    />
+  }
+>
+  <Route
+    path="/inventory/users"
+    element={<Users />}
+  />
+</Route>
+
+</Route>
 
           </Route>
 

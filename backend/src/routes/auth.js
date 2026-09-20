@@ -8,23 +8,35 @@ const pool = require("../db");
 // ====================================================
 // REGISTER
 // ====================================================
+// Public registration
+// Users are always registered as Faculty.
+//
+// IMPORTANT:
+// The client cannot choose Admin, HOD, IT, Principal,
+// or Store Manager through this endpoint.
+// ====================================================
 router.post("/register", async (req, res) => {
   try {
     const {
       full_name,
       email,
       password,
-      role,
       department,
     } = req.body;
 
-    if (!full_name || !email || !password || !role) {
+    // ------------------------------------------------
+    // Validate required fields
+    // ------------------------------------------------
+    if (!full_name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Full name, email, password and role are required",
+        message: "Full name, email and password are required",
       });
     }
 
+    // ------------------------------------------------
+    // Check whether email already exists
+    // ------------------------------------------------
     const existingUser = await pool.query(
       "SELECT id FROM users WHERE email = $1",
       [email]
@@ -37,8 +49,30 @@ router.post("/register", async (req, res) => {
       });
     }
 
+    // ------------------------------------------------
+    // Hash password
+    // ------------------------------------------------
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // ------------------------------------------------
+    // SECURITY:
+    // Public registration always creates Faculty.
+    //
+    // Even if somebody sends:
+    //
+    // "role": "Admin"
+    //
+    // or:
+    //
+    // "role": "Principal"
+    //
+    // the backend ignores it.
+    // ------------------------------------------------
+    const role = "Faculty";
+
+    // ------------------------------------------------
+    // Create user
+    // ------------------------------------------------
     const result = await pool.query(
       `
       INSERT INTO users (
@@ -71,6 +105,9 @@ router.post("/register", async (req, res) => {
 
     const user = result.rows[0];
 
+    // ------------------------------------------------
+    // Registration response
+    // ------------------------------------------------
     res.status(201).json({
       success: true,
       message: "Registration successful",
@@ -97,6 +134,9 @@ router.post("/login", async (req, res) => {
       password,
     } = req.body;
 
+    // ------------------------------------------------
+    // Validate login fields
+    // ------------------------------------------------
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -104,6 +144,9 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    // ------------------------------------------------
+    // Find user
+    // ------------------------------------------------
     const result = await pool.query(
       `
       SELECT
@@ -130,6 +173,9 @@ router.post("/login", async (req, res) => {
 
     const user = result.rows[0];
 
+    // ------------------------------------------------
+    // Check account status
+    // ------------------------------------------------
     if (!user.is_active) {
       return res.status(403).json({
         success: false,
@@ -137,6 +183,9 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    // ------------------------------------------------
+    // Compare password
+    // ------------------------------------------------
     const passwordMatch = await bcrypt.compare(
       password,
       user.password_hash
@@ -150,8 +199,7 @@ router.post("/login", async (req, res) => {
     }
 
     // ==================================================
-    // IMPORTANT
-    // Include isDemo inside JWT
+    // CREATE JWT
     // ==================================================
     const token = jwt.sign(
       {
@@ -165,9 +213,14 @@ router.post("/login", async (req, res) => {
       }
     );
 
-    // Remove password before sending user data
+    // ------------------------------------------------
+    // Never send password hash to frontend
+    // ------------------------------------------------
     delete user.password_hash;
 
+    // ------------------------------------------------
+    // Login response
+    // ------------------------------------------------
     res.json({
       success: true,
       message: "Login successful",

@@ -15,6 +15,7 @@ import {
   X,
   Boxes,
   Settings,
+  Users,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
@@ -227,6 +228,39 @@ const menuGroups: MenuGroup[] = [
           "Faculty",
           "Store Manager",
         ],
+      },
+    ],
+  },
+    {
+    title: "ANALYTICS",
+
+    items: [
+      {
+        name: "Reports",
+        path: "/inventory/reports",
+        icon: BarChart3,
+
+        roles: [
+          "Admin",
+          "HOD",
+          "IT",
+          "Principal",
+          "Faculty",
+          "Store Manager",
+        ],
+      },
+    ],
+  },
+
+  {
+    title: "ADMINISTRATION",
+
+    items: [
+      {
+        name: "User Management",
+        path: "/inventory/users",
+        icon: Users,
+        roles: ["Admin"],
       },
     ],
   },
