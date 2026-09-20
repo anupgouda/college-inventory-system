@@ -247,7 +247,7 @@ function PurchaseOrder() {
       setUpdatingId(order.id);
 
       const response = await apiFetch(
-        `/api/purchase-orders/${order.id}/status`,
+        `/api/purchase-orders/${order.id}`,
         {
           method: "PATCH",
           headers: {
