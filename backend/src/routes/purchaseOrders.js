@@ -335,70 +335,199 @@ router.patch(
   }
 });
 
-
 // ======================================================
-// DELETE PURCHASE ORDER
-// DELETE /api/purchase-orders/:id
+// UPDATE PURCHASE ORDER
+// PATCH /api/purchase-orders/:id
 // ======================================================
 
-router.delete(
+router.patch(
   "/:id",
   authorizeRoles("Admin", "Store Manager"),
   async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const result = await pool.query(
-      `
-      DELETE FROM purchase_orders
-      WHERE id = $1
-      RETURNING
-        id,
-        po_number AS "poNumber",
-        vendor_id AS "vendorId",
-        item_name AS "itemName",
+    try {
+      const { id } = req.params;
+      const {
+        poNumber,
+        vendorId,
+        orderDate,
+        expectedDeliveryDate,
+        itemName,
         quantity,
-        unit_price AS "unitPrice",
-        total_amount AS "totalAmount",
-        status
-      `,
-      [id]
-    );
+        unitPrice,
+        status,
+        notes,
+      } = req.body;
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({
+      // --------------------------------------------------
+      // STATUS-ONLY UPDATE
+      // Used by Approve / Receive / Cancel
+      // --------------------------------------------------
+
+      if (
+        status !== undefined &&
+        poNumber === undefined &&
+        vendorId === undefined &&
+        itemName === undefined &&
+        quantity === undefined &&
+        unitPrice === undefined
+      ) {
+        const allowedStatuses = [
+          "Open",
+          "Approved",
+          "Received",
+          "Cancelled",
+        ];
+
+        if (!allowedStatuses.includes(status)) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid purchase order status",
+          });
+        }
+
+        const result = await pool.query(
+          `
+          UPDATE purchase_orders
+          SET status = $1
+          WHERE id = $2
+          RETURNING
+            id,
+            po_number AS "poNumber",
+            vendor_id AS "vendorId",
+            order_date AS "orderDate",
+            expected_delivery_date AS "expectedDeliveryDate",
+            item_name AS "itemName",
+            quantity,
+            unit_price AS "unitPrice",
+            total_amount AS "totalAmount",
+            status,
+            notes,
+            created_at AS "createdAt"
+          `,
+          [status, id]
+        );
+
+        if (result.rows.length === 0) {
+          return res.status(404).json({
+            success: false,
+            message: "Purchase order not found",
+          });
+        }
+
+        return res.json(result.rows[0]);
+      }
+
+      // --------------------------------------------------
+      // FULL PURCHASE ORDER UPDATE
+      // Used when editing PO details
+      // --------------------------------------------------
+
+      if (
+        !poNumber ||
+        !vendorId ||
+        !itemName ||
+        quantity === undefined ||
+        unitPrice === undefined ||
+        !status
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "PO number, vendor, item name, quantity, unit price and status are required",
+        });
+      }
+
+      const allowedStatuses = [
+        "Open",
+        "Approved",
+        "Received",
+        "Cancelled",
+      ];
+
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid purchase order status",
+        });
+      }
+
+      const result = await pool.query(
+        `
+        UPDATE purchase_orders
+        SET
+          po_number = $1,
+          vendor_id = $2,
+          order_date = COALESCE($3::date, order_date),
+          expected_delivery_date = $4,
+          item_name = $5,
+          quantity = $6,
+          unit_price = $7,
+          status = $8,
+          notes = $9
+        WHERE id = $10
+        RETURNING
+          id,
+          po_number AS "poNumber",
+          vendor_id AS "vendorId",
+          order_date AS "orderDate",
+          expected_delivery_date AS "expectedDeliveryDate",
+          item_name AS "itemName",
+          quantity,
+          unit_price AS "unitPrice",
+          total_amount AS "totalAmount",
+          status,
+          notes,
+          created_at AS "createdAt"
+        `,
+        [
+          poNumber.trim(),
+          vendorId,
+          orderDate || null,
+          expectedDeliveryDate || null,
+          itemName.trim(),
+          Number(quantity),
+          Number(unitPrice),
+          status,
+          notes || null,
+          id,
+        ]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Purchase order not found",
+        });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error(
+        "PATCH /api/purchase-orders/:id error:",
+        error
+      );
+
+      if (error.code === "23505") {
+        return res.status(409).json({
+          success: false,
+          message: "Purchase order number already exists",
+        });
+      }
+
+      if (error.code === "23503") {
+        return res.status(404).json({
+          success: false,
+          message: "Vendor not found",
+        });
+      }
+
+      res.status(500).json({
         success: false,
-        message: "Purchase order not found",
+        message: "Failed to update purchase order",
       });
     }
-
-    res.json({
-      success: true,
-      message: "Purchase order deleted successfully",
-      data: result.rows[0],
-    });
-
-  } catch (error) {
-    console.error(
-      "DELETE /api/purchase-orders/:id error:",
-      error
-    );
-
-    if (error.code === "23503") {
-      return res.status(409).json({
-        success: false,
-        message:
-          "Purchase order cannot be deleted because it is referenced by another record",
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete purchase order",
-    });
   }
-});
-
+);
 
 // ======================================================
 // DELETE ALL PURCHASE ORDERS
