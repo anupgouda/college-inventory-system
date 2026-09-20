@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../../config/api";
+import { apiFetch } from "../../utils/api";
 import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
@@ -15,8 +15,6 @@ import {
   X,
 } from "lucide-react";
 
-const QUOTATION_API = `${API_BASE_URL}/api/quotations`;
-const VENDOR_API = `${API_BASE_URL}/api/vendors`;
 
 type Vendor = {
   id: number;
@@ -80,7 +78,7 @@ function Quotation() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(QUOTATION_API);
+      const response = await apiFetch("/api/quotations");
 
       if (!response.ok) {
         throw new Error("Failed to load quotations");
@@ -99,7 +97,7 @@ function Quotation() {
 
   const fetchVendors = async () => {
     try {
-      const response = await fetch(VENDOR_API);
+      const response = await apiFetch("/api/vendors");
 
       if (!response.ok) {
         throw new Error("Failed to load vendors");
@@ -225,7 +223,7 @@ function Quotation() {
       setSaving(true);
       setError("");
 
-      const response = await fetch(QUOTATION_API, {
+      const response = await apiFetch("/api/quotations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -269,7 +267,7 @@ function Quotation() {
     status: "Approved" | "Rejected"
   ) => {
     try {
-      const response = await fetch(`${QUOTATION_API}/${id}/status`, {
+      const response = await apiFetch(`/api/quotations/${id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -302,7 +300,7 @@ function Quotation() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`${QUOTATION_API}/${id}`, {
+      const response = await apiFetch(`/api/quotations/${id}`, {
         method: "DELETE",
       });
 
