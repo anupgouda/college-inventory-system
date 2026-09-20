@@ -333,7 +333,7 @@ function BillMaster() {
     status: "Approved" | "Paid" | "Cancelled"
   ) => {
     try {
-      const response = await apiFetch(`/api/bills/${id}/status`, {
+      const response = await apiFetch(`/api/bills/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

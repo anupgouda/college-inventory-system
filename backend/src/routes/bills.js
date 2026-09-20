@@ -252,6 +252,66 @@ router.patch(
       notes,
     } = req.body;
 
+    // --------------------------------------------------
+// STATUS-ONLY UPDATE
+// Used by Approve / Reject / Pay / Cancel
+// --------------------------------------------------
+
+if (
+  status !== undefined &&
+  billNumber === undefined &&
+  vendorId === undefined &&
+  itemName === undefined &&
+  quantity === undefined &&
+  unitPrice === undefined
+) {
+  const allowedStatuses = [
+    "Pending",
+    "Approved",
+    "Paid",
+    "Cancelled",
+  ];
+
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid bill status",
+    });
+  }
+
+  const result = await pool.query(
+    `
+    UPDATE bills
+    SET status = $1
+    WHERE id = $2
+    RETURNING
+      id,
+      bill_number AS "billNumber",
+      vendor_id AS "vendorId",
+      purchase_order_id AS "purchaseOrderId",
+      bill_date AS "billDate",
+      due_date AS "dueDate",
+      item_name AS "itemName",
+      quantity,
+      unit_price AS "unitPrice",
+      total_amount AS "totalAmount",
+      status,
+      notes,
+      created_at AS "createdAt"
+    `,
+    [status, id]
+  );
+
+  if (result.rows.length === 0) {
+    return res.status(404).json({
+      success: false,
+      message: "Bill not found",
+    });
+  }
+
+  return res.json(result.rows[0]);
+}
+
     if (
       !billNumber ||
       !vendorId ||
