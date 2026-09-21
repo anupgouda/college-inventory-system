@@ -58,7 +58,7 @@ export default function Login() {
         throw new Error("Authentication token could not be stored.");
       }
 
-      navigate("/inventory/dashboard");
+      navigate("/inventory/dashboard", { replace: true });
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Unable to login"
