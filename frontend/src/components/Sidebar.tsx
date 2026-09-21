@@ -231,27 +231,7 @@ const menuGroups: MenuGroup[] = [
       },
     ],
   },
-    {
-    title: "ANALYTICS",
-
-    items: [
-      {
-        name: "Reports",
-        path: "/inventory/reports",
-        icon: BarChart3,
-
-        roles: [
-          "Admin",
-          "HOD",
-          "IT",
-          "Principal",
-          "Faculty",
-          "Store Manager",
-        ],
-      },
-    ],
-  },
-
+  
   {
     title: "ADMINISTRATION",
 
