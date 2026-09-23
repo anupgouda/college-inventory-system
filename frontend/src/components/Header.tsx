@@ -499,16 +499,14 @@ export default function Header({
             notification
           )
         }
-        className={`group flex w-full items-start gap-3 border-b border-slate-100 px-4 py-3 text-left transition ${
+        className={`group flex w-full items-start gap-3 border-b border-slate-100 px-4 py-3.5 text-left transition ${
           read
             ? "bg-white hover:bg-slate-50"
             : "bg-blue-50/60 hover:bg-blue-50"
         }`}
       >
-        {/* Notification icon */}
-
         <div
-          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${getNotificationIconClass(
+          className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${getNotificationIconClass(
             notification.type
           )}`}
         >
@@ -517,12 +515,8 @@ export default function Header({
           )}
         </div>
 
-        {/* Notification content */}
-
         <div className="min-w-0 flex-1">
-
           <div className="flex items-start justify-between gap-2">
-
             <p
               className={`text-sm ${
                 read
@@ -536,7 +530,6 @@ export default function Header({
             {!read && (
               <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-600" />
             )}
-
           </div>
 
           <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
@@ -544,7 +537,6 @@ export default function Header({
           </p>
 
           <div className="mt-2 flex items-center justify-between">
-
             <span className="text-[11px] font-medium text-slate-400">
               {formatNotificationTime(
                 notification.createdAt
@@ -552,17 +544,13 @@ export default function Header({
             </span>
 
             <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 opacity-0 transition group-hover:opacity-100">
-
               {getNotificationLabel(
                 notification.type
               )}
 
               <ChevronRight size={12} />
-
             </span>
-
           </div>
-
         </div>
       </button>
     );
@@ -584,17 +572,13 @@ export default function Header({
 
     return (
       <div>
-
-        <div className="sticky top-0 z-10 border-y border-slate-100 bg-slate-50 px-4 py-2">
-
+        <div className="sticky top-0 z-10 border-y border-slate-100 bg-slate-50/95 px-4 py-2 backdrop-blur">
           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">
             {sectionTitle}
           </p>
-
         </div>
 
         {items.map(renderNotification)}
-
       </div>
     );
   }
@@ -631,59 +615,60 @@ export default function Header({
    */
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
+      <div className="relative flex min-h-[72px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
 
-      <div className="flex min-h-16 items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-8">
+        {/* Subtle visual accent */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
         {/* =====================================
             PAGE INFORMATION
             ===================================== */}
 
         <div className="min-w-0">
-
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-
+          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
             <span>
               {section ||
                 "College Inventory"}
             </span>
 
-            <ChevronRight size={13} />
+            <ChevronRight
+              size={12}
+              className="text-slate-300"
+            />
 
-            <span className="font-medium text-slate-600">
+            <span className="text-slate-500">
               Administration
             </span>
-
           </div>
 
           {title && (
-            <h1 className="mt-1 truncate text-lg font-bold text-slate-900">
+            <h1 className="mt-1 truncate text-xl font-extrabold tracking-tight text-slate-950 sm:text-[22px]">
               {title}
             </h1>
           )}
 
           {description && (
-            <p className="hidden truncate text-xs text-slate-400 sm:block">
+            <p className="mt-0.5 hidden max-w-2xl truncate text-xs font-medium text-slate-400 sm:block">
               {description}
             </p>
           )}
-
         </div>
 
         {/* =====================================
             HEADER ACTIONS
             ===================================== */}
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
 
           {/* SEARCH */}
 
           <button
             type="button"
-            className="hidden h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 sm:flex"
+            className="hidden h-10 w-10 items-center justify-center rounded-xl border border-transparent text-slate-500 transition-all duration-200 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-950 sm:flex"
             title="Search"
           >
-            <Search size={19} />
+            <Search size={19} strokeWidth={2.2} />
           </button>
 
           {/* =================================
@@ -694,7 +679,6 @@ export default function Header({
             ref={notificationRef}
             className="relative"
           >
-
             <button
               type="button"
               onClick={() =>
@@ -702,26 +686,25 @@ export default function Header({
                   (current) => !current
                 )
               }
-              className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition ${
+              className={`relative flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-200 ${
                 notificationOpen
-                  ? "bg-slate-100 text-slate-900"
-                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  ? "border-slate-200 bg-slate-100 text-slate-950 shadow-sm"
+                  : "border-transparent text-slate-500 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-950"
               }`}
               title="Notifications"
             >
-
-              <Bell size={20} />
+              <Bell
+                size={19}
+                strokeWidth={2.2}
+              />
 
               {unreadCount > 0 && (
-                <span className="absolute right-1 top-1 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white ring-2 ring-white">
-
+                <span className="absolute right-0.5 top-0.5 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-slate-950 px-1 text-[9px] font-extrabold text-white ring-2 ring-white">
                   {unreadCount > 99
                     ? "99+"
                     : unreadCount}
-
                 </span>
               )}
-
             </button>
 
             {/* =================================
@@ -729,19 +712,17 @@ export default function Header({
                 ================================= */}
 
             {notificationOpen && (
-              <div className="absolute right-0 top-12 z-50 w-[min(390px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/10">
+              <div className="absolute right-0 top-[52px] z-50 w-[min(390px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.14)]">
 
                 {/* PANEL HEADER */}
 
                 <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
-
                   <div>
-
-                    <h3 className="text-sm font-bold text-slate-900">
+                    <h3 className="text-sm font-extrabold tracking-tight text-slate-950">
                       Notifications
                     </h3>
 
-                    <p className="mt-0.5 text-xs text-slate-400">
+                    <p className="mt-0.5 text-xs font-medium text-slate-400">
                       {unreadCount > 0
                         ? `${unreadCount} unread notification${
                             unreadCount === 1
@@ -750,7 +731,6 @@ export default function Header({
                           }`
                         : "You're all caught up"}
                     </p>
-
                   </div>
 
                   <div className="flex items-center gap-1">
@@ -765,10 +745,9 @@ export default function Header({
                       disabled={
                         loadingNotifications
                       }
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50"
                       title="Refresh notifications"
                     >
-
                       <RefreshCw
                         size={15}
                         className={
@@ -777,7 +756,6 @@ export default function Header({
                             : ""
                         }
                       />
-
                     </button>
 
                     {/* MARK ALL */}
@@ -788,21 +766,17 @@ export default function Header({
                         onClick={
                           handleMarkAllAsRead
                         }
-                        className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-blue-600 transition hover:bg-blue-50"
+                        className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-bold text-blue-600 transition hover:bg-blue-50"
                         title="Mark all notifications as read"
                       >
-
                         <CheckCheck size={14} />
 
                         <span>
                           Mark all read
                         </span>
-
                       </button>
                     )}
-
                   </div>
-
                 </div>
 
                 {/* =================================
@@ -810,16 +784,14 @@ export default function Header({
                     ================================= */}
 
                 <div className="max-h-[480px] overflow-y-auto">
-
                   {notifications.length ===
                   0 ? (
                     <div className="px-6 py-12 text-center">
-
                       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
                         <Check size={22} />
                       </div>
 
-                      <h4 className="mt-4 text-sm font-bold text-slate-700">
+                      <h4 className="mt-4 text-sm font-extrabold text-slate-700">
                         No notifications
                       </h4>
 
@@ -827,7 +799,6 @@ export default function Header({
                         Everything looks good
                         right now.
                       </p>
-
                     </div>
                   ) : (
                     <>
@@ -847,22 +818,17 @@ export default function Header({
                       )}
                     </>
                   )}
-
                 </div>
 
                 {/* FOOTER */}
 
-                <div className="border-t border-slate-100 bg-slate-50 px-4 py-2.5">
-
-                  <p className="text-center text-[10px] font-medium uppercase tracking-wider text-slate-400">
+                <div className="border-t border-slate-100 bg-slate-50/80 px-4 py-2.5">
+                  <p className="text-center text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                     Live inventory monitoring
                   </p>
-
                 </div>
-
               </div>
             )}
-
           </div>
 
           {/* =================================
@@ -873,7 +839,6 @@ export default function Header({
             ref={profileRef}
             className="relative ml-1"
           >
-
             {/* Profile button */}
 
             <button
@@ -883,10 +848,10 @@ export default function Header({
                   (current) => !current
                 )
               }
-              className={`flex items-center gap-2 rounded-xl px-2 py-1.5 transition ${
+              className={`group flex items-center gap-2 rounded-2xl border px-1.5 py-1.5 transition-all duration-200 ${
                 profileOpen
-                  ? "bg-slate-100"
-                  : "hover:bg-slate-100"
+                  ? "border-slate-200 bg-slate-100 shadow-sm"
+                  : "border-transparent hover:border-slate-200 hover:bg-slate-50"
               }`}
               aria-label="Open profile menu"
               aria-expanded={profileOpen}
@@ -894,33 +859,32 @@ export default function Header({
 
               {/* Avatar */}
 
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white shadow-sm">
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-[11px] font-extrabold text-white shadow-sm">
                 {userInitials}
+
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500" />
               </div>
 
               {/* User information */}
 
               <div className="hidden max-w-[150px] text-left md:block">
-
-                <p className="truncate text-xs font-bold text-slate-800">
+                <p className="truncate text-xs font-extrabold tracking-tight text-slate-900">
                   {userName}
                 </p>
 
-                <p className="truncate text-[10px] text-slate-400">
+                <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-400">
                   {userRole}
                 </p>
-
               </div>
 
               <ChevronDown
                 size={15}
-                className={`hidden text-slate-400 transition-transform md:block ${
+                className={`hidden text-slate-400 transition-transform duration-200 md:block ${
                   profileOpen
                     ? "rotate-180"
                     : ""
                 }`}
               />
-
             </button>
 
             {/* =================================
@@ -928,77 +892,63 @@ export default function Header({
                 ================================= */}
 
             {profileOpen && (
-              <div className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/10">
+              <div className="absolute right-0 top-[52px] z-50 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.14)]">
 
                 {/* USER HEADER */}
 
-                <div className="border-b border-slate-100 bg-slate-50/70 px-4 py-4">
-
+                <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white px-4 py-4">
                   <div className="flex items-center gap-3">
-
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-white shadow-sm">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-sm font-extrabold text-white shadow-sm">
                       {userInitials}
                     </div>
 
                     <div className="min-w-0">
-
-                      <p className="truncate text-sm font-bold text-slate-900">
+                      <p className="truncate text-sm font-extrabold tracking-tight text-slate-950">
                         {userName}
                       </p>
 
-                      <p className="mt-0.5 truncate text-xs text-slate-500">
+                      <p className="mt-0.5 truncate text-xs font-medium text-slate-500">
                         {userEmail}
                       </p>
-
                     </div>
-
                   </div>
-
                 </div>
 
                 {/* ACCOUNT DETAILS */}
 
                 <div className="px-4 py-3">
-
                   <div className="flex items-center justify-between gap-4 py-2">
-
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs font-medium text-slate-500">
                       Role
                     </span>
 
-                    <span className="rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-600">
+                    <span className="rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-600">
                       {userRole}
                     </span>
-
                   </div>
 
                   <div className="flex items-center justify-between gap-4 py-2">
-
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs font-medium text-slate-500">
                       Department
                     </span>
 
-                    <span className="max-w-[150px] truncate text-xs font-medium text-slate-700">
+                    <span className="max-w-[150px] truncate text-xs font-bold text-slate-700">
                       {userDepartment}
                     </span>
-
                   </div>
 
                   {currentUser?.is_demo && (
-                    <div className="mt-2 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2">
-
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-500">
+                    <div className="mt-2 rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2.5">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-500">
                         Demo Environment
                       </p>
 
-                      <p className="mt-0.5 text-[11px] text-indigo-600">
+                      <p className="mt-0.5 text-[11px] font-medium leading-4 text-indigo-600">
                         Sample data is isolated from
                         the main system.
                       </p>
-
                     </div>
                   )}
-
                 </div>
 
                 {/* ACTIONS */}
@@ -1013,25 +963,21 @@ export default function Header({
                       setProfileOpen(false);
                       navigate("/settings");
                     }}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-slate-50"
                   >
-
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition group-hover:bg-slate-200 group-hover:text-slate-700">
                       <User size={16} />
                     </div>
 
                     <div>
-
-                      <p className="text-sm font-semibold text-slate-700">
+                      <p className="text-sm font-bold text-slate-700">
                         Profile & Settings
                       </p>
 
-                      <p className="text-[10px] text-slate-400">
+                      <p className="text-[10px] font-medium text-slate-400">
                         Manage your account
                       </p>
-
                     </div>
-
                   </button>
 
                   {/* LOGOUT */}
@@ -1039,38 +985,28 @@ export default function Header({
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-red-50"
+                    className="group mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-red-50"
                   >
-
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-500">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-500 transition group-hover:bg-red-100">
                       <LogOut size={16} />
                     </div>
 
                     <div>
-
-                      <p className="text-sm font-semibold text-red-600">
+                      <p className="text-sm font-bold text-red-600">
                         Logout
                       </p>
 
-                      <p className="text-[10px] text-red-400">
+                      <p className="text-[10px] font-medium text-red-400">
                         Sign out of your account
                       </p>
-
                     </div>
-
                   </button>
-
                 </div>
-
               </div>
             )}
-
           </div>
-
         </div>
-
       </div>
-
     </header>
   );
 }

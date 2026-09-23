@@ -16,6 +16,7 @@ import {
   Boxes,
   Settings,
   Users,
+  Sparkles,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
@@ -55,11 +56,9 @@ type MenuGroup = {
   items: MenuItem[];
 };
 
-/*
-========================================================
-ROLE DEFINITIONS
-========================================================
-*/
+/* ========================================================
+   ROLES
+======================================================== */
 
 const ALL_ROLES: UserRole[] = [
   "Admin",
@@ -70,16 +69,13 @@ const ALL_ROLES: UserRole[] = [
   "Store Manager",
 ];
 
-/*
-========================================================
-MENU GROUPS
-========================================================
-*/
+/* ========================================================
+   MENU
+======================================================== */
 
 const menuGroups: MenuGroup[] = [
   {
-    title: "OVERVIEW",
-
+    title: "HOME",
     items: [
       {
         name: "Dashboard",
@@ -91,14 +87,12 @@ const menuGroups: MenuGroup[] = [
   },
 
   {
-    title: "INVENTORY",
-
+    title: "OPERATIONS",
     items: [
       {
         name: "Indent Master",
         path: "/inventory/indent-master",
         icon: FileText,
-
         roles: [
           "Admin",
           "HOD",
@@ -111,7 +105,6 @@ const menuGroups: MenuGroup[] = [
         name: "Indent Approval",
         path: "/inventory/indent-approval",
         icon: ClipboardCheck,
-
         roles: [
           "Admin",
           "HOD",
@@ -124,7 +117,6 @@ const menuGroups: MenuGroup[] = [
         name: "Asset Master",
         path: "/inventory/asset-master",
         icon: Package,
-
         roles: [
           "Admin",
           "HOD",
@@ -137,7 +129,6 @@ const menuGroups: MenuGroup[] = [
         name: "Stock Entry",
         path: "/inventory/stock-entry",
         icon: Warehouse,
-
         roles: [
           "Admin",
           "IT",
@@ -149,7 +140,6 @@ const menuGroups: MenuGroup[] = [
         name: "Material Checkout",
         path: "/inventory/material-checkout",
         icon: ArrowLeftRight,
-
         roles: [
           "Admin",
           "HOD",
@@ -163,78 +153,51 @@ const menuGroups: MenuGroup[] = [
 
   {
     title: "PROCUREMENT",
-
     items: [
       {
         name: "Vendor Master",
         path: "/inventory/vendor-master",
         icon: Building2,
-
-        roles: [
-          "Admin",
-          "Store Manager",
-        ],
+        roles: ["Admin", "Store Manager"],
       },
 
       {
         name: "Purchase Order",
         path: "/inventory/purchase-order",
         icon: ShoppingCart,
-
-        roles: [
-          "Admin",
-          "Store Manager",
-        ],
+        roles: ["Admin", "Store Manager"],
       },
 
       {
         name: "Quotation",
         path: "/inventory/quotation",
         icon: FileCheck2,
-
-        roles: [
-          "Admin",
-          "Store Manager",
-        ],
+        roles: ["Admin", "Store Manager"],
       },
 
       {
         name: "Bill Master",
         path: "/inventory/bill-master",
         icon: Receipt,
-
-        roles: [
-          "Admin",
-          "Store Manager",
-        ],
+        roles: ["Admin", "Store Manager"],
       },
     ],
   },
 
   {
-    title: "ANALYTICS",
-
+    title: "INSIGHTS",
     items: [
       {
         name: "Reports",
         path: "/inventory/reports",
         icon: BarChart3,
-
-        roles: [
-          "Admin",
-          "HOD",
-          "IT",
-          "Principal",
-          "Faculty",
-          "Store Manager",
-        ],
+        roles: ALL_ROLES,
       },
     ],
   },
-  
+
   {
     title: "ADMINISTRATION",
-
     items: [
       {
         name: "User Management",
@@ -246,16 +209,13 @@ const menuGroups: MenuGroup[] = [
   },
 ];
 
-/*
-========================================================
-SAFE USER READER
-========================================================
-*/
+/* ========================================================
+   USER
+======================================================== */
 
 function getStoredUser(): StoredUser | null {
   try {
-    const storedUser =
-      localStorage.getItem("user");
+    const storedUser = localStorage.getItem("user");
 
     if (!storedUser) {
       return null;
@@ -272,11 +232,9 @@ function getStoredUser(): StoredUser | null {
   }
 }
 
-/*
-========================================================
-INITIALS
-========================================================
-*/
+/* ========================================================
+   INITIALS
+======================================================== */
 
 function getInitials(name?: string) {
   if (!name) {
@@ -299,11 +257,9 @@ function getInitials(name?: string) {
   }`.toUpperCase();
 }
 
-/*
-========================================================
-SIDEBAR
-========================================================
-*/
+/* ========================================================
+   SIDEBAR
+======================================================== */
 
 function Sidebar({
   isOpen = true,
@@ -317,11 +273,9 @@ function Sidebar({
       getStoredUser()
     );
 
-  /*
-  ======================================================
-  LOAD USER
-  ======================================================
-  */
+  /* ======================================================
+     LOAD USER
+  ====================================================== */
 
   useEffect(() => {
     const loadUser = () => {
@@ -343,26 +297,21 @@ function Sidebar({
     };
   }, []);
 
-  /*
-  ======================================================
-  ROLE
-  ======================================================
-  */
+  /* ======================================================
+     ROLE
+  ====================================================== */
 
   const currentRole =
     currentUser?.role || "Faculty";
 
-  /*
-  ======================================================
-  FILTER MENU BY ROLE
-  ======================================================
-  */
+  /* ======================================================
+     FILTER MENU
+  ====================================================== */
 
   const visibleMenuGroups = useMemo(() => {
     return menuGroups
       .map((group) => ({
         ...group,
-
         items: group.items.filter(
           (item) =>
             item.roles.includes(
@@ -375,77 +324,63 @@ function Sidebar({
       );
   }, [currentRole]);
 
-  /*
-  ======================================================
-  TOGGLE GROUP
-  ======================================================
-  */
+  /* ======================================================
+     TOGGLE
+  ====================================================== */
 
-  const toggleGroup = (
-    title: string
-  ) => {
-    setCollapsedGroups(
-      (previous) => ({
-        ...previous,
-
-        [title]:
-          !previous[title],
-      })
-    );
+  const toggleGroup = (title: string) => {
+    setCollapsedGroups((previous) => ({
+      ...previous,
+      [title]: !previous[title],
+    }));
   };
 
-  /*
-  ======================================================
-  USER INFORMATION
-  ======================================================
-  */
+  /* ======================================================
+     USER INFO
+  ====================================================== */
 
   const userName =
-    currentUser?.full_name ||
-    "User";
+    currentUser?.full_name || "User";
 
   const userRole =
-    currentUser?.role ||
-    "Faculty";
+    currentUser?.role || "Faculty";
 
   const userDepartment =
-    currentUser?.department ||
-    "—";
+    currentUser?.department || "—";
 
   const initials =
     getInitials(userName);
 
-  /*
-  ======================================================
-  RETURN
-  ======================================================
-  */
+  const isDemoUser =
+    currentUser?.is_demo === true;
+
+  /* ======================================================
+     RETURN
+  ====================================================== */
 
   return (
     <>
-      {/* =================================================
-          MOBILE OVERLAY
-          ================================================= */}
+      {/* MOBILE OVERLAY */}
 
       {isOpen && onClose && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm lg:hidden"
           onClick={onClose}
         />
       )}
 
-      {/* =================================================
-          SIDEBAR
-          ================================================= */}
+      {/* SIDEBAR */}
 
       <aside
         className={`
-          fixed left-0 top-0 z-50 flex h-screen w-[270px]
-          flex-col overflow-hidden
-          border-r border-slate-800/80
-          bg-[#0b1220]
-          text-white
-          shadow-2xl
+          fixed left-0 top-0 z-50
+          flex h-screen w-[272px]
+          flex-col
+          overflow-hidden
+          border-r border-slate-200
+          bg-white
+          text-slate-900
+          shadow-[8px_0_30px_rgba(15,23,42,0.04)]
           transition-transform duration-300
           lg:translate-x-0
           ${
@@ -458,87 +393,87 @@ function Sidebar({
 
         {/* =================================================
             BRAND
-            ================================================= */}
+        ================================================= */}
 
-        <div className="flex h-[78px] shrink-0 items-center justify-between border-b border-white/10 px-5">
+        <div className="flex h-[82px] shrink-0 items-center justify-between border-b border-slate-100 px-5">
 
           <div className="flex items-center gap-3">
 
-            {/* Logo */}
+            {/* LOGO */}
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg shadow-blue-600/20">
               <Boxes
-                size={22}
+                size={21}
                 strokeWidth={2.2}
+                className="text-white"
               />
             </div>
 
-            <div>
+            {/* BRAND */}
 
-              <h1 className="text-[15px] font-bold tracking-wide">
+            <div>
+              <h1 className="text-[15px] font-extrabold tracking-[-0.02em] text-slate-950">
                 College Inventory
               </h1>
 
-              <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">
+              <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.22em] text-slate-400">
                 Management System
               </p>
-
             </div>
-
           </div>
 
-          {/* Mobile close */}
+          {/* MOBILE CLOSE */}
 
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white lg:hidden"
+              className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-900 lg:hidden"
               aria-label="Close sidebar"
             >
-              <X size={20} />
+              <X size={19} />
             </button>
           )}
-
         </div>
 
         {/* =================================================
-            USER ROLE / SYSTEM STATUS
-            ================================================= */}
+            USER / SYSTEM STATUS
+        ================================================= */}
 
-        <div className="mx-4 mt-5 rounded-xl border border-white/5 bg-white/[0.035] px-3 py-3">
+        <div className="px-4 pt-5">
 
-          <div className="flex items-center gap-3">
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
 
-            <div className="relative">
+            <div className="flex items-center gap-3">
 
-              <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
 
-              <div className="absolute inset-0 animate-ping rounded-full bg-emerald-400 opacity-40" />
+                <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
 
-            </div>
+                <div className="absolute h-2.5 w-2.5 animate-ping rounded-full bg-emerald-400 opacity-30" />
+              </div>
 
-            <div className="min-w-0">
+              <div className="min-w-0">
 
-              <p className="text-xs font-semibold text-slate-300">
-                System Online
-              </p>
+                <p className="text-[11px] font-bold text-slate-800">
+                  System Online
+                </p>
 
-              <p className="truncate text-[10px] text-slate-500">
-                {currentRole} Access
-              </p>
+                <p className="mt-0.5 truncate text-[10px] font-medium text-slate-400">
+                  {currentRole} Access
+                </p>
+              </div>
 
             </div>
 
           </div>
-
         </div>
 
         {/* =================================================
             NAVIGATION
-            ================================================= */}
+        ================================================= */}
 
-        <nav className="sidebar-scroll mt-5 flex-1 overflow-y-auto px-3 pb-5">
+        <nav className="sidebar-scroll mt-6 flex-1 overflow-y-auto px-4 pb-5">
 
           {visibleMenuGroups.map(
             (group) => {
@@ -551,10 +486,10 @@ function Sidebar({
               return (
                 <div
                   key={group.title}
-                  className="mb-5"
+                  className="mb-6"
                 >
 
-                  {/* GROUP HEADER */}
+                  {/* GROUP TITLE */}
 
                   <button
                     type="button"
@@ -563,28 +498,28 @@ function Sidebar({
                         group.title
                       )
                     }
-                    className="mb-2 flex w-full items-center justify-between px-3"
+                    className="mb-2 flex w-full items-center justify-between px-2"
                   >
 
-                    <span className="text-[10px] font-bold tracking-[0.18em] text-slate-500">
+                    <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-400">
                       {group.title}
                     </span>
 
                     {isCollapsed ? (
                       <ChevronRight
                         size={13}
-                        className="text-slate-600"
+                        className="text-slate-300"
                       />
                     ) : (
                       <ChevronDown
                         size={13}
-                        className="text-slate-600"
+                        className="text-slate-300"
                       />
                     )}
 
                   </button>
 
-                  {/* MENU ITEMS */}
+                  {/* ITEMS */}
 
                   {!isCollapsed && (
                     <div className="space-y-1">
@@ -597,12 +532,8 @@ function Sidebar({
 
                           return (
                             <NavLink
-                              key={
-                                item.path
-                              }
-                              to={
-                                item.path
-                              }
+                              key={item.path}
+                              to={item.path}
                               onClick={
                                 onClose
                               }
@@ -611,71 +542,60 @@ function Sidebar({
                               }) =>
                                 `
                                 group relative flex items-center gap-3
-                                rounded-xl px-3 py-2.5
-                                text-[13px] font-medium
+                                rounded-2xl px-3 py-2.5
+                                text-[13px] font-semibold
                                 transition-all duration-200
                                 ${
                                   isActive
-                                    ? "bg-gradient-to-r from-blue-600/20 to-indigo-600/10 text-white shadow-sm"
-                                    : "text-slate-400 hover:bg-white/[0.055] hover:text-slate-100"
+                                    ? "bg-slate-950 text-white shadow-lg shadow-slate-900/10"
+                                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-950"
                                 }
                                 `
                               }
                             >
-
                               {({
                                 isActive,
                               }) => (
                                 <>
-                                  {/* Active indicator */}
-
-                                  {isActive && (
-                                    <span className="absolute left-0 h-6 w-[3px] rounded-r-full bg-blue-500" />
-                                  )}
-
-                                  {/* Icon */}
+                                  {/* ICON */}
 
                                   <div
                                     className={`
-                                      flex h-8 w-8 shrink-0 items-center justify-center
-                                      rounded-lg transition
+                                      flex h-9 w-9 shrink-0
+                                      items-center justify-center
+                                      rounded-xl
+                                      transition-all duration-200
                                       ${
                                         isActive
-                                          ? "bg-blue-500/15 text-blue-400"
-                                          : "bg-white/[0.035] text-slate-500 group-hover:bg-white/[0.07] group-hover:text-slate-300"
+                                          ? "bg-white/10 text-white"
+                                          : "bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-slate-700"
                                       }
                                     `}
                                   >
-
                                     <Icon
                                       size={17}
                                       strokeWidth={
-                                        1.9
+                                        2
                                       }
                                     />
-
                                   </div>
 
-                                  {/* Name */}
+                                  {/* NAME */}
 
                                   <span className="flex-1">
                                     {item.name}
                                   </span>
 
-                                  {/* Active arrow */}
+                                  {/* ACTIVE INDICATOR */}
 
                                   {isActive && (
                                     <ChevronRight
-                                      size={
-                                        15
-                                      }
-                                      className="text-blue-400"
+                                      size={15}
+                                      className="text-white/60"
                                     />
                                   )}
-
                                 </>
                               )}
-
                             </NavLink>
                           );
                         }
@@ -683,88 +603,99 @@ function Sidebar({
 
                     </div>
                   )}
-
                 </div>
               );
             }
           )}
-
         </nav>
 
         {/* =================================================
-            BOTTOM
-            ================================================= */}
+            BOTTOM AREA
+        ================================================= */}
 
-        <div className="shrink-0 border-t border-white/10 p-3">
+        <div className="shrink-0 border-t border-slate-100 bg-white p-4">
 
-          {/* Settings */}
+          {/* SETTINGS */}
 
           <NavLink
             to="/settings"
             onClick={onClose}
             className={({ isActive }) =>
               `
-              mb-2 flex items-center gap-3 rounded-xl px-3 py-2.5
-              text-[13px] font-medium transition
+              mb-3 flex items-center gap-3
+              rounded-2xl px-3 py-2.5
+              text-[13px] font-semibold
+              transition
               ${
                 isActive
-                  ? "bg-white/10 text-white"
-                  : "text-slate-400 hover:bg-white/[0.055] hover:text-white"
+                  ? "bg-slate-100 text-slate-950"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-950"
               }
               `
             }
           >
-
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.035]">
-              <Settings size={17} />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100">
+              <Settings
+                size={17}
+                strokeWidth={2}
+              />
             </div>
 
-            <span>
-              Settings
-            </span>
-
+            <span>Settings</span>
           </NavLink>
 
-          {/* User */}
+          {/* USER CARD */}
 
-          <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.035] p-3">
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
 
-            {/* Avatar */}
+            <div className="flex items-center gap-3">
 
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-xs font-bold">
-              {initials}
+              {/* AVATAR */}
+
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-extrabold text-white shadow-md shadow-blue-600/15">
+
+                {initials}
+
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
+              </div>
+
+              {/* DETAILS */}
+
+              <div className="min-w-0 flex-1">
+
+                <div className="flex items-center gap-1.5">
+
+                  <p className="truncate text-xs font-bold text-slate-900">
+                    {userName}
+                  </p>
+
+                  {isDemoUser && (
+                    <Sparkles
+                      size={12}
+                      className="shrink-0 text-violet-500"
+                    />
+                  )}
+                </div>
+
+                <p className="mt-0.5 truncate text-[10px] font-medium text-slate-400">
+                  {userRole}
+                  {userDepartment !==
+                    "—" &&
+                    ` • ${userDepartment}`}
+                </p>
+
+              </div>
+
             </div>
-
-            {/* User details */}
-
-            <div className="min-w-0 flex-1">
-
-              <p className="truncate text-xs font-semibold text-slate-200">
-                {userName}
-              </p>
-
-              <p className="truncate text-[10px] text-slate-500">
-                {userRole}
-                {userDepartment !==
-                  "—" &&
-                  ` • ${userDepartment}`}
-              </p>
-
-            </div>
-
-            {/* Online */}
-
-            <div className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
 
           </div>
 
         </div>
-
       </aside>
 
       {/* =================================================
-          SCROLLBAR STYLE
-          ================================================= */}
+          SCROLLBAR
+      ================================================= */}
 
       <style>{`
         .sidebar-scroll::-webkit-scrollbar {
@@ -776,12 +707,12 @@ function Sidebar({
         }
 
         .sidebar-scroll::-webkit-scrollbar-thumb {
-          background: rgba(148, 163, 184, 0.15);
-          border-radius: 10px;
+          background: rgba(148, 163, 184, 0.18);
+          border-radius: 999px;
         }
 
         .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-          background: rgba(148, 163, 184, 0.3);
+          background: rgba(100, 116, 139, 0.30);
         }
       `}</style>
     </>
