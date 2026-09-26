@@ -456,6 +456,13 @@ Demo operations do not modify normal production records.
 The demo user itself remains stored in the main users table and is identified using the is_demo flag.
 
 🏗️ System Architecture
+### 🔎 Interactive Architecture Diagram
+
+Explore the complete system architecture through an interactive Archify diagram:
+
+👉 **[Open Interactive Architecture Diagram](./college-inventory-architecture.html)**
+
+The diagram covers the frontend, backend REST API, JWT authentication, RBAC, inventory modules, procurement modules, PostgreSQL/Supabase, and demo data isolation.
 
 The application follows a three-tier full-stack architecture.
 
