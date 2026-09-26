@@ -460,7 +460,7 @@ The demo user itself remains stored in the main users table and is identified us
 
 Explore the complete system architecture through an interactive Archify diagram:
 
-👉 **[Open Interactive Architecture Diagram](./college-inventory-architecture.html)**
+👉 👉 **[Open Interactive Architecture Diagram](https://anupgouda.github.io/college-inventory-system/college-inventory-architecture.html)**
 
 The diagram covers the frontend, backend REST API, JWT authentication, RBAC, inventory modules, procurement modules, PostgreSQL/Supabase, and demo data isolation.
 
